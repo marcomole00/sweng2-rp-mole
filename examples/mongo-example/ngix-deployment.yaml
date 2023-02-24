@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-example
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx 
+  template: 
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m" # max is 1000m, replicas*cpu <= 1000m must be true or not all replicas will spawn (actually it depends on the number of cores, but i think the vm i'm using only has one cpu)
+        ports:
+        - containerPort: 8080
+
