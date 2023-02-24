@@ -14,6 +14,8 @@ The scope of this report is to analyze the configuration options of the language
 
 In this example is analyzed a multi-tier web application, that is composed by a replicated redis backend and a replicated php frontend.
 
+The files are in ./examples/stateless.
+
 ## redis-leader-deployment
 
 ### metadata
@@ -30,16 +32,11 @@ metadata:
 The labels are used by the redis-leader service to find the deployment
 and the corresponding pods.
 
-It is good practice to use a hierarchical system of labels in a cluster
-to make the architecture of the system explicit. In this case, just by reading
-the yaml file redis-leader-deployments one can guess various aspects such as: 
-- app: redis -> the presence of the "app" tag implies that there are
-several different container images 
-- role: leader -> the application,
-in this case redis, requires a differentiation of roles of the
-replicas. In this statement we are instantiating the leader. 
-- tier:backend -> the system has several tiers, here we are declaring a
-backend element
+It's good practice to use a hierarchical system of labels in a cluster to make the architecture of the system explicit.
+ In this case, just by reading  the  file redis-leader-deployment.yaml one can guess various aspects such as: 
+- app: redis -> the presence of the "app" tag implies that there are several different container images 
+- role: leader -> the application, in this case redis, requires a differentiation of roles of the replicas. In this statement we are instantiating the leader. 
+- tier:backend -> the system has several tiers, here we are declaring a backend element
 
 ### DeploymentSpec
 
@@ -47,12 +44,11 @@ We can specify the number of replicas of the leader pods, even though
 the redis-follower containers used are not expecting more than one
 leader.
 
-This leads to a probably obvious consideration: when setting up a K8s
+This leads to an inherently limitation of the kubernetes language: when setting up a K8s 
 Deployment the architectural requirements of the software must be known
 to the person writing the deployment file. There is no mechanism in the
-Kubernetes configuration language that it's able to describe these
-requirements. For example, container X has to have at least/at most N
-replicas.
+Kubernetes configuration language that it's able to infer and enforce on the writer these requirements. 
+For example, container X has to have at least/at most N replicas.
 
 #### PodSpec
 
@@ -121,7 +117,7 @@ have all internal services not exposed by default.
 This example analyzes the deployment of a Wordpress site and a MySQL database.
 Both applications use PersistentVolumes and PersistentVolumeClaims to store data, thus are considered to be stateful.
 
-Three files: 
+The files are in ./example/stateful/: 
 1. kustomization.yaml 
   - secret generator (for mysqldb credentials) 
   - MySQL resource configs 
@@ -140,7 +136,7 @@ A new method for organizing and applying declaration file is presented: kustomiz
 
 kustomize uses a file called kustomization.yaml that contains the
 reference to all the yaml file of the k8s configuration to be applied,
-together with additional customization of those resources. q56 For
+together with additional customization of those resources.For
 example is possible to declare secret and configMaps directly in the
 kustomization.yaml, like in the example.
 
@@ -177,8 +173,7 @@ spec:
 
 A PVC is an object that represent a request for storage. Since no
 StorageClassName attribute was defined in the pvc spec, the default type
-of volume was provioned. Since i'm testing all of this on linode.com, a
-linode volume of 20Gi was automatically provisioned.
+of volume was provioned. Since i'm testing all of this on linode.com, a linode volume of 20Gi was automatically provisioned.
 
 In general a PVC is a request for storage that is decoupled from the details of how that storage will be provisioned or where it will be located in the cluster.
 The storage class defines the type and parameters of the storage needed. It allows cluster administrators to decouple the storage infrastructure from the cluster infrastructure.
