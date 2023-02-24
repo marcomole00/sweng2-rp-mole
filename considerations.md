@@ -47,7 +47,7 @@ leader.
 This leads to an inherently limitation of the kubernetes language: when setting up a K8s 
 Deployment the architectural requirements of the software must be known
 to the person writing the deployment file. There is no mechanism in the
-Kubernetes configuration language that it's able to infer and enforce on the writer these requirements. 
+Kubernetes configuration language that it's able to infer and enforce  these requirements on the writer. 
 For example, container X has to have at least/at most N replicas.
 
 #### PodSpec
@@ -186,3 +186,14 @@ Storage classes define the following attributes:
 - Mount options: Additional mount options that will be applied when the PV is mounted.
 
 The linode environment offers two classes, which differ only in the reclaim policy.
+
+
+
+
+# from here
+
+- Devise an application deployment that showcases the considerations in this file
+  - multi tier
+  - use of configurations/ secrets through kustomize
+  - use of Persistent Volumes
+- Research the limitation of the language on the enforcing of the container requirements
