@@ -54,7 +54,7 @@ It's good practice to use a hierarchical system of labels in a cluster to make t
 - role: leader -> the application, in this case redis, requires a differentiation of roles of the replicas. In this statement we are instantiating the leader. 
 - tier:backend -> the system has several tiers, here we are declaring a backend element
 
-### Deployment configuration
+### Deployment Specification
 
 The configuration of the deployment is done through an object called DeploymentSpec
 
@@ -68,7 +68,7 @@ to the person writing the deployment file. There is no mechanism in the
 Kubernetes configuration language that it's able to infer and enforce  these requirements on the writer. 
 For example, container X has to have at least/at most N replicas.
 
-#### PodSpec
+#### Pod Specification
 
 In the PodSpec (Object that describes the Pod that will be replicated by
 the Deployment) one of the most interesting configuration possibilities
@@ -210,10 +210,7 @@ The linode environment offers two classes, which differ only in the reclaim poli
 
 # from here
 
-- Devise an application deployment that showcases the considerations in this file
-  - multi tier
-  - use of configurations/ secrets through kustomize
-  - use of Persistent Volumes
+
 - Research the limitation of the language on the enforcing of the container requirements
   - che cosa si potrebbe fare 
   - ricerca su stack over flow / et simila su quanto sia un problema reale.
