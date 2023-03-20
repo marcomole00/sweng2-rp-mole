@@ -1,0 +1,215 @@
+# patient-management-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-management
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: patient-management
+  template:
+    metadata:
+      labels:
+        app: patient-management
+    spec:
+      containers:
+      - name: patient-management
+        image: my-healthcare-app/patient-management:v1.0.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: url
+        - name: PATIENT_MANAGEMENT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: patient-management-api-key
+
+---
+
+# patient-management-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: patient-management
+spec:
+  selector:
+    app: patient-management
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  type: ClusterIP
+
+---
+
+# medical-appointment-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medical-appointment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: medical-appointment
+  template:
+    metadata:
+      labels:
+        app: medical-appointment
+    spec:
+      containers:
+      - name: medical-appointment
+        image: my-healthcare-app/medical-appointment:v1.0.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: url
+
+---
+
+# medical-appointment-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: medical-appointment
+spec:
+  selector:
+    app: medical-appointment
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  type: ClusterIP
+
+---
+
+# billing-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: billing
+  template:
+    metadata:
+      labels:
+        app: billing
+    spec:
+      containers:
+      - name: billing
+        image: my-healthcare-app/billing:v1.0.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: url
+
+---
+
+# billing-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: billing
+spec:
+  selector:
+    app: billing
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+
+
+
+
+#healthcare-ingress.yaml
+# todo -> indentation is broken
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#name: healthcare-ingress
+#annotations:
+#nginx.ingress.kubernetes.io/rewrite-target: /
+#spec:
+#  rules:
+#      host: healthcare.example.com
+#      - http:
+#        paths:
+#            path: /patient-management
+#            pathType: Prefix
+#            backend:
+#            service:
+#            name: patient-management
+#            port:
+#            name: http
+#            path: /medical-appointment
+#            pathType: Prefix
+#            backend:
+#            service:
+#            name: medical-appointment
+#            port:
+#            name: http
+#            path: /billing
+#            pathType: Prefix
+#            backend:
+#            service:
+#            name: billing
+#            port:
+#            name: http
+---
+## healthcare-config.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+name: healthcare-config
+data:
+  default-language: en
+  patient-management-service-url: http://patient-management.default.svc.cluster.local
+  medical-appointment-service-url: http://medical-appointment.default.svc.cluster.local
+  billing-service-url: http://billing.default.svc.cluster.local
+--- 
+#database-credentials-secret.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+name: database-credentials
+type: Opaque
+data:
+  url: <base64-encoded database URL>
+  username: <base64-encoded database username>
+  password: <base64-encoded database password>
+---
+#api-keys-secret.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-keys
+  type: Opaque
+  data:
+    patient-management-api-key: <base64-encoded patient management API key>

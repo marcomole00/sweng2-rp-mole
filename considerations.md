@@ -10,6 +10,20 @@ One of the key features of the Kubernetes configuration language is that it allo
 
 The scope of this report is to analyze the configuration options of the language.
 
+
+## a short primer on kubernetes components
+
+- Pods: Pods are the smallest deployable units in Kubernetes. They can contain one or more containers, and they are scheduled to run on nodes in the cluster.
+
+- Services: Services provide a stable IP address and DNS name for a set of pods. They allow other components in the cluster to access the pods using a consistent endpoint.
+
+- Deployments: Deployments manage the rolling updates and rollbacks of a set of pods. They ensure that a specified number of replicas of a pod are running at any given time.
+
+- ConfigMaps and Secrets: ConfigMaps and Secrets are used to store configuration data and sensitive information, respectively. They can be used to configure applications running in pods or to provide environment variables and other configuration information to containers.
+
+
+
+
 # stateless example
 
 In this example is analyzed a multi-tier web application, that is composed by a replicated redis backend and a replicated php frontend.
@@ -17,6 +31,8 @@ In this example is analyzed a multi-tier web application, that is composed by a 
 The files are in ./examples/stateless.
 
 ## redis-leader-deployment
+
+
 
 ### metadata
 
@@ -38,7 +54,9 @@ It's good practice to use a hierarchical system of labels in a cluster to make t
 - role: leader -> the application, in this case redis, requires a differentiation of roles of the replicas. In this statement we are instantiating the leader. 
 - tier:backend -> the system has several tiers, here we are declaring a backend element
 
-### DeploymentSpec
+### Deployment configuration
+
+The configuration of the deployment is done through an object called DeploymentSpec
 
 We can specify the number of replicas of the leader pods, even though
 the redis-follower containers used are not expecting more than one
@@ -197,3 +215,47 @@ The linode environment offers two classes, which differ only in the reclaim poli
   - use of configurations/ secrets through kustomize
   - use of Persistent Volumes
 - Research the limitation of the language on the enforcing of the container requirements
+  - che cosa si potrebbe fare 
+  - ricerca su stack over flow / et simila su quanto sia un problema reale.
+  
+
+# On enforcing container requirments:
+ When writing the specification of a pod one can specify the image to run and the registry to pull it from. The registry is just a private or public repository  that host the container images. 
+
+As said before  images require configuration through the use of  Environment Variables. An example use of EV can be found in the case studies.
+
+An erranous configuration of a container  is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture.  It could be also a potentially costly error,  remember that most of k8s cluster live on a pay-per-use cloud environment.
+
+The documentation of these variables is generally found on the registry itself, to be consulted by the developer when writing the specification of the Pod.
+
+There are no automatic mechanism that inform the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
+
+This mechanism could be included in the development environment, for example as a vscode plugin. 
+
+The registries should offer an API endpoint that replies with the configuration option of the requested image.
+
+Informations about the configuration options could be
+- mandatory or facultative (ie have a meaningful and/or well know default value)
+- type of the configuration options -> int, float, string , some other kind of structured data (like json?)
+
+``` json
+{
+  "image": "imagename:version",
+  "parA" : {
+    "mandatory" : true,
+    "type":"int"
+  },
+  "parB" : {
+    "mandatory" : true,
+    "type":"int"
+  },
+  "parC" : {
+    "mandatory" : false,
+    "type":"int",
+    "default": "admin"
+  }
+}
+```
+
+An example response of the API.
+This information can be checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified.

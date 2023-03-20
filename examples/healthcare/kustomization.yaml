@@ -1,0 +1,12 @@
+secretGenerator:
+- name: database-credentials
+  literals: 
+   - url= <db url>
+   - username = <user name of the db>
+   - password = <pwd >
+- name : api-keys
+  literals:
+  -  patient-management-api-key = <api key>
+resources:
+  - "test.yaml"
+
