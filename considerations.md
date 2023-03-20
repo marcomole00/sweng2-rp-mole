@@ -230,7 +230,14 @@ The documentation of these variables is generally found on the registry itself, 
 
 There are no automatic mechanism that inform the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 
-This mechanism could be included in the development environment, for example as a vscode plugin. 
+An example of  configuration requirement for a database image could be: 
+- admin username ->  mandatory
+- admin password ->  mandatory
+- public port -> not mandatory , defaults to a well known port number
+
+This mechanism could be included in the development environment, for example as a vscode plugin. Implementing this mechanism into the k8s cli utility is nearly useless, due to the complexity of the sofware and the potentially escalation of API calls done to the registry endpoint. This is a check that is best done before testing the actual configuration on the k8s runtime.
+
+
 
 The registries should offer an API endpoint that replies with the configuration option of the requested image.
 
