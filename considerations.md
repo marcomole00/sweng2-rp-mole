@@ -45,8 +45,7 @@ metadata:
     tier: backend
 ```
 
-The labels are used by the redis-leader service to find the deployment
-and the corresponding pods.
+The labels are used by the redis-leader service to find the deployment and the corresponding pods.
 
 It's good practice to use a hierarchical system of labels in a cluster to make the architecture of the system explicit.
  In this case, just by reading  the  file redis-leader-deployment.yaml one can guess various aspects such as: 

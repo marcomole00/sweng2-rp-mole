@@ -21,7 +21,7 @@ spec:
         ports:
         - containerPort: 8081
         env:
-        - name: ME_CONFIG_MONGODB_ADMINUSERNAME # bad practice -> use a secret
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
           valueFrom:
             secretKeyRef:
               name: mongodb-secret
