@@ -325,36 +325,21 @@ Reference is :https://hub.docker.com/_/mongo
 ``` json
 {
   "image": "postgres:latest",
-  "POSTGRES_PASSWORD" : {
-    "mandatory" : true,
-    "type":"string"
-  },
-  "POSTGRES_USER" : {
+  "NGINX_ENVSUBST_TEMPLATE_DIR " : {
     "mandatory" : false,
     "type":"string",
-    "default": "postgres"
+    "default" : "/etc/nginx/templates"
   },
-  "POSTGRES_DB" : {
+  "NGINX_ENVSUBST_TEMPLATE_SUFFIX " : {
     "mandatory" : false,
     "type":"string",
-    "default": "Value of POSTGRES_USER"
+    "default": ".template"
   },
-    "POSTGRES_INITDB_ARGS" : {
+  "NGINX_ENVSUBST_OUTPUT_DIR " : {
     "mandatory" : false,
     "type":"string",
-    "default": null
-  },
-   "POSTGRES_INITDB_WALDIR" : {
-    "mandatory" : false,
-    "type":"string",
-    "default": "PGDATA"
-  },
- "POSTGRES_INITDB_WALDIR" : {
-    "mandatory" : false,
-    "type":"string",
-    "default": "PGDATA"
+    "default": "/etc/nginx/conf.d"
   },
 
-  
 }
 ```
