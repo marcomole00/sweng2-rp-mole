@@ -358,36 +358,3 @@ Reference is :https://hub.docker.com/_/mongo
   
 }
 ```
-
-### influxDB
-
-
-``` json
-{
-  "image": "influxdb:latest",
-  "POSTGRES_PASSWORD" : {
-    "mandatory" : true,
-    "type":"string"
-  },
-  "POSTGRES_USER" : {
-    "mandatory" : false,
-    "type":"string",
-    "default": "postgres"
-  },
-  "POSTGRES_DB" : {
-    "mandatory" : false,
-    "type":"string",
-    "default": "Value of POSTGRES_USER"
-  },
-    "POSTGRES_INITDB_ARGS" : {
-    "mandatory" : false,
-    "type":"string",
-    "default": null
-  },
-   "POSTGRES_INITDB_WALDIR" : {
-    "mandatory" : false,
-    "type":"string",
-    "default": "PGDATA"
-  
-}
-```
