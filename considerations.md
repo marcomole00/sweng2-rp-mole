@@ -215,7 +215,7 @@ The linode environment offers two classes, which differ only in the reclaim poli
   - ricerca su stack over flow / et simila su quanto sia un problema reale.
   
 
-# On enforcing container requirments:
+# On enforcing container requirements:
  When writing the specification of a pod one can specify the image to run and the registry to pull it from. The registry is just a private or public repository  that host the container images. 
 
 As said before  images require configuration through the use of  Environment Variables. An example use of EV can be found in the case studies.
@@ -234,11 +234,10 @@ An example of  configuration requirement for a database image could be:
 This mechanism could be included in the development environment, for example as a vscode plugin. Implementing this mechanism into the k8s cli utility is nearly useless, due to the complexity of the sofware and the potentially escalation of API calls done to the registry endpoint. This is a check that is best done before testing the actual configuration on the k8s runtime.
 
 
-
 The registries should offer an API endpoint that replies with the configuration option of the requested image.
 
 Informations about the configuration options could be
-- mandatory or facultative (ie have a meaningful and/or well know default value)
+- mandatory or facultative (ie have a meaningful and/or well known default value)
 - type of the configuration options -> int, float, string , some other kind of structured data (like json?)
 
 ``` json
@@ -262,3 +261,133 @@ Informations about the configuration options could be
 
 An example response of the API.
 This information can be checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified.
+
+
+## A note on the community 
+
+On stackoverflow and reddit,  two of the  main kubernetes public communities, I found nearly zero results when searching for users complaining and / or wanting a system
+that would help them check the environmental variables of their kubernetes deployment. This could be the due to the community being used to not having tooling and integrated 
+developing environments and thus being used to manually checking their configuration files against the documentation provided the registry.
+The keyword used for this research where: container requirements, container environment variables, environment variables, checking environment variables
+
+## A bunch of examples 
+
+### mongo
+Reference is :https://hub.docker.com/_/mongo
+
+``` json
+{
+  "image": "mongo:latest",
+  "MONGO_INITDB_ROOT_USERNAME" : {
+    "mandatory" : true,
+    "type":"string"
+  },
+  "MONGO_INITDB_ROOT_PASSWORD" : {
+    "mandatory" : true,
+    "type":"string"
+  },
+  "parC" : {
+    "mandatory" : false,
+    "type":"int",
+    "default": "admin"
+  }
+}
+```
+
+
+### Postgres
+
+
+``` json
+{
+  "image": "postgres:latest",
+  "POSTGRES_PASSWORD" : {
+    "mandatory" : true,
+    "type":"string"
+  },
+  "POSTGRES_USER" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "postgres"
+  },
+  "POSTGRES_DB" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "Value of POSTGRES_USER"
+  }
+}
+```
+
+
+### nginx
+
+
+``` json
+{
+  "image": "postgres:latest",
+  "POSTGRES_PASSWORD" : {
+    "mandatory" : true,
+    "type":"string"
+  },
+  "POSTGRES_USER" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "postgres"
+  },
+  "POSTGRES_DB" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "Value of POSTGRES_USER"
+  },
+    "POSTGRES_INITDB_ARGS" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": null
+  },
+   "POSTGRES_INITDB_WALDIR" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "PGDATA"
+  },
+ "POSTGRES_INITDB_WALDIR" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "PGDATA"
+  },
+
+  
+}
+```
+
+### influxDB
+
+
+``` json
+{
+  "image": "influxdb:latest",
+  "POSTGRES_PASSWORD" : {
+    "mandatory" : true,
+    "type":"string"
+  },
+  "POSTGRES_USER" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "postgres"
+  },
+  "POSTGRES_DB" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "Value of POSTGRES_USER"
+  },
+    "POSTGRES_INITDB_ARGS" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": null
+  },
+   "POSTGRES_INITDB_WALDIR" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "PGDATA"
+  
+}
+```
