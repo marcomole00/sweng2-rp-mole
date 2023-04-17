@@ -165,14 +165,14 @@ secretGenerator:
 ```
 
 This approach makes more explicit and easy to read all the applied configuration options. 
-It's also more straightforward to modify an exisiting declaration, since all the configuration options are in one file.
+It's also more straightforward to modify an existing declaration, since all the configuration options are in one file.
 
 It's a possible to apply "patches" that override the "base" declaration.
 
 ## wordpress-deployment
 
 Since both wordpress and mysql require a persistent storage solution,
-i.e. a volume with a lifecycle that's indipendent from the pod's lifecycle, a PersistentVolumeClaim is used.
+i.e. a volume with a lifecycle that's independent from the pod's lifecycle, a PersistentVolumeClaim is used.
 
 ```yaml
 kind: PersistentVolumeClaim
@@ -190,7 +190,7 @@ spec:
 
 A PVC is an object that represent a request for storage. Since no
 StorageClassName attribute was defined in the pvc spec, the default type
-of volume was provioned. Since i'm testing all of this on linode.com, a linode volume of 20Gi was automatically provisioned.
+of volume was provisioned. Since i'm testing all of this on linode.com, a linode volume of 20Gi was automatically provisioned.
 
 In general a PVC is a request for storage that is decoupled from the details of how that storage will be provisioned or where it will be located in the cluster.
 The storage class defines the type and parameters of the storage needed. It allows cluster administrators to decouple the storage infrastructure from the cluster infrastructure.
@@ -220,7 +220,7 @@ The linode environment offers two classes, which differ only in the reclaim poli
 
 As said before  images require configuration through the use of  Environment Variables. An example use of EV can be found in the case studies.
 
-An erranous configuration of a container  is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture.  It could be also a potentially costly error,  remember that most of k8s cluster live on a pay-per-use cloud environment.
+An erroneous configuration of a container  is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture.  It could be also a potentially costly error, since most of K8s clusters exist on a pay-per-use cloud environment.
 
 The documentation of these variables is generally found on the registry itself, to be consulted by the developer when writing the specification of the Pod.
 
@@ -231,12 +231,12 @@ An example of  configuration requirement for a database image could be:
 - admin password ->  mandatory
 - public port -> not mandatory , defaults to a well known port number
 
-This mechanism could be included in the development environment, for example as a vscode plugin. Implementing this mechanism into the k8s cli utility is nearly useless, due to the complexity of the sofware and the potentially escalation of API calls done to the registry endpoint. This is a check that is best done before testing the actual configuration on the k8s runtime.
+This mechanism could be included in the development environment, for example as a vscode plugin. Implementing this mechanism into the k8s cli utility is nearly useless, due to the complexity of the software and the potentially escalation of API calls done to the registry endpoint. This is a check that is best done before testing the actual configuration on the k8s runtime.
 
 
 The registries should offer an API endpoint that replies with the configuration option of the requested image.
 
-Informations about the configuration options could be
+Information about the configuration options could be
 - mandatory or facultative (ie have a meaningful and/or well known default value)
 - type of the configuration options -> int, float, string , some other kind of structured data (like json?)
 
