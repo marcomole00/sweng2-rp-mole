@@ -220,7 +220,7 @@ In the last decade we have seen the rise of a new figure in the software enginee
 
 ## Examples 
 
-These are examples based on the most popular images taken from the public registry https://hub.docker.com.
+These are examples based on the most popular images taken from the public registry of [Docker](https://hub.docker.com).
 
 ### mongoDB
 ``` json
