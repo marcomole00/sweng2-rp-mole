@@ -285,11 +285,6 @@ Reference is :https://hub.docker.com/_/mongo
   "MONGO_INITDB_ROOT_PASSWORD" : {
     "mandatory" : true,
     "type":"string"
-  },
-  "parC" : {
-    "mandatory" : false,
-    "type":"int",
-    "default": "admin"
   }
 }
 ```
@@ -340,6 +335,47 @@ Reference is :https://hub.docker.com/_/mongo
     "type":"string",
     "default": "/etc/nginx/conf.d"
   },
+
+}
+```
+
+
+
+### InfluxDB
+
+``` json
+{
+  "image": "influxDB:latest",
+  "DOCKER_INFLUXDB_INIT_USERNAME " : {
+    "mandatory" : true,
+    "type":"string",
+    
+  },
+  "DOCKER_INFLUXDB_INIT_PASSWORD " : {
+    "mandatory" : true,
+    "type":"string",
+    
+  },
+  "DOCKER_INFLUXDB_INIT_ORG " : {
+    "mandatory" : true,
+    "type":"string",
+  },
+  "DOCKER_INFLUXDB_INIT_BUCKET " : {
+    "mandatory" : true,
+    "type":"string",
+  },
+   "DOCKER_INFLUXDB_INIT_RETENTION " : {
+    "mandatory" : false,
+    "type":"int",
+    "default": "-1"
+  },
+   "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN " : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "auto-generated"
+  },
+  
+  
 
 }
 ```

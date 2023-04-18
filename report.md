@@ -6,6 +6,7 @@ toc: true
 numbersections: true
 fontsize: 11pt
 listings: true
+toc-depth: 2
 ---
 
 
@@ -24,12 +25,7 @@ Overall, Kubernetes represents a significant advancement in the field of contain
 
 The Kubernetes configuration language is expressed in YAML or JSON format, and it consists of a set of declarative statements that describe the desired state of the Kubernetes resources. These statements include specifications for the containers that run within the resources, as well as other settings such as environment variables, ports, and volumes.
 
-One of the key features of the Kubernetes configuration language is that it allows you to define resources as code, which means that you can store your application configuration in version control systems and apply it to multiple environments. This approach ensures consistency and reduces the potential for human error when deploying and managing Kubernetes applications.
-
-
-The scope of this report is to analyze the configuration (not true->) options of the language.
-
-
+In this report I'll explore how the declarative language is used to define the main kubernetes objects. Then I'll propose a mechanism for simplifying the process of writing correct configurations of Pods.
 
 ## How kubernetes works
 
@@ -40,8 +36,6 @@ One of the key concepts in Kubernetes is the pod, which is the smallest deployab
 The Kubernetes control plane consists of several components, including the API server, etcd, the scheduler, and the controller manager. The API server provides a RESTful API that users can use to interact with the Kubernetes cluster. Etcd is a distributed key-value store that stores the configuration data for the cluster, such as the desired state of the system. The scheduler is responsible for assigning pods to nodes in the cluster based on various criteria, such as resource availability and affinity. Finally, the controller manager is responsible for ensuring that the current state of the cluster matches the desired state.
 
 Kubernetes also provides several key features that make it easy to manage containerized applications, such as service discovery, load balancing, and auto-scaling. Service discovery allows applications to easily find and communicate with other services in the same cluster. Load balancing ensures that traffic is distributed evenly across all instances of a service, while auto-scaling makes it easy to automatically scale the number of instances up or down based on demand.
-
-In summary, Kubernetes is a powerful tool for managing containerized applications. At its core, Kubernetes is built around the concept of a cluster, which is a group of machines that work together to run containerized applications. The Kubernetes control plane consists of several components that work together to provide a robust and scalable platform for deploying and managing containerized applications. Kubernetes also provides several key features that make it easy to manage containerized applications, such as service discovery, load balancing, and auto-scaling.
 
 
 ## What are the main components
@@ -163,44 +157,72 @@ spec:
 
 This configuration file specifies that a hostPath volume named *my-volume* should be mounted at */data *inside the container. The *volumeMounts* field in the container specification specifies which volume to mount, and where to mount it.
 
-## Some examples of the declarative language
-
-In this section I'll look at some examples of the declarative language of Kubernetes and analyze how it helps developers in writing clear, self-explanatory and fine tuned deployments.
-
-
-
 # My contribution
 
 ## The Problem
+When writing the specification of a Pod one can specify the container images to run and  from which registry  pull it from. Container registries are software repositories that store and distribute container images. A container registry is typically used by developers and DevOps teams to store and manage container images, which can be easily shared across different environments, such as development, staging, and production. Container registries provide features like versioning, access control, and image scanning to ensure that container images are secure, reliable, and up-to-date.
 
-
-When writing the specification of a Pod one can specify the container images to run and the from which registry  pull it from. Container registries are software repositories that store and distribute container images. A container registry is typically used by developers and DevOps teams to store and manage container images, which can be easily shared across different environments, such as development, staging, and production. Container registries provide features like versioning, access control, and image scanning to ensure that container images are secure, reliable, and up-to-date.
-
-Often images require configuration through the use of environment variables.
+Most often, images require configuration through the use of environment variables.
 The documentation of these variables is generally found on the registry itself, to be consulted by the developer when writing the specification of the Pod.
 
 An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture. It could be also a potentially costly error, since most of K8s clusters exist on a pay-per-use cloud environment.
 
 
-There are no automatic mechanism that inform the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
+There is no automatic mechanism that inform the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 
 ## A Possible Solution
 
-This mechanism could be included in the development environment, for example as a LSP language server. The Language Server Protocol is an open, JSON-based protocol that allows different editors and IDEs (Integrated Development Environments) to communicate with language-specific servers in a standardized way. By using an LSP server, an editor or IDE can provide advanced features like code completion, error checking, and syntax highlighting for a particular programming language.
+This mechanism could be included in the development environment, for example as a LSP language server.
+The registries should offer an HTTP endpoint that replies with the configuration option of the requested image, in a machine readable format.
+Information about the configuration options could be:
+
+- If a value is mandatory or facultative (ie have a meaningful and/or well known default value).
+
+- Type of the configuration options : int, float, string , some other kind of structured data.
+
+``` json
+{
+  "image": "postgres:latest",
+  "POSTGRES_PASSWORD" : {
+    "mandatory" : true,
+    "type":"string"
+  },
+  "POSTGRES_USER" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "postgres"
+  },
+  "POSTGRES_DB" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "Value of POSTGRES_USER"
+  }
+}
+```
+An example response for the image of the *postgres* database.
+
+This information is then  checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified. 
+The results of this analysis are then shown to the user as warnings or error marks in the IDE.
+
+This solution provides very little overhead on the registry, due to the lightweight nature of the API structure.
+
+The advantages of implementing this "type checking" mechanism in the the development environment are:
+
+1. Highly portable to multiple types of development environment.
+
+2. Easily extendible with more features and eventually adaptable to future changes in the language
+
+3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze all different types of codebases.
 
 
-Implementing this "type checking" mechanism in the the development environment has a some advantages:
+In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibilities of errors when deploying a big system with a lot of different components.
 
-1. highly portable
 
-2. easily extendible with more features and changes
+## Examples 
 
-3. More flexible, since the declarative language is only one of the ways to configure kubernetes objects. Secrets and ConfigMap can be stored on external providers
+These are examples based on the most popular images taken from the public registry https://hub.docker.com.
 
-### What registry have to implement
-
-The registries should offer an API endpoint that replies with the configuration option of the requested image.
-
+### mongoDB
 ``` json
 {
   "image": "mongo:latest",
@@ -211,25 +233,69 @@ The registries should offer an API endpoint that replies with the configuration 
   "MONGO_INITDB_ROOT_PASSWORD" : {
     "mandatory" : true,
     "type":"string"
-  },
-  "parC" : {
-    "mandatory" : false,
-    "type":"int",
-    "default": "admin"
   }
 }
 ```
 
-An example response of the API.
-This information can be checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified.
+### nginx
+
+``` json
+{
+  "image": "postgres:latest",
+  "NGINX_ENVSUBST_TEMPLATE_DIR " : {
+    "mandatory" : false,
+    "type":"string",
+    "default" : "/etc/nginx/templates"
+  },
+  "NGINX_ENVSUBST_TEMPLATE_SUFFIX " : {
+    "mandatory" : false,
+    "type":"string",
+    "default": ".template"
+  },
+  "NGINX_ENVSUBST_OUTPUT_DIR " : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "/etc/nginx/conf.d"
+  },
+
+}
+```
 
 
-THINGS TO ADD
 
-- very little overhead for the registry
+### InfluxDB
 
-- the LS can cache for a while
-
-- The LS is good because it potentially knows the whole codebase, kubectl only knows what you are applying in that moment.
-
-- talk about how the role of the swDev and the DevOps are gradually diverging. The one who deploys is not the one who wrote the application. This system could facilitate bridging the gap.
+``` json
+{
+  "image": "influxDB:latest",
+  "DOCKER_INFLUXDB_INIT_USERNAME " : {
+    "mandatory" : true,
+    "type":"string",
+    
+  },
+  "DOCKER_INFLUXDB_INIT_PASSWORD " : {
+    "mandatory" : true,
+    "type":"string",
+    
+  },
+  "DOCKER_INFLUXDB_INIT_ORG " : {
+    "mandatory" : true,
+    "type":"string",
+  },
+  "DOCKER_INFLUXDB_INIT_BUCKET " : {
+    "mandatory" : true,
+    "type":"string",
+  },
+   "DOCKER_INFLUXDB_INIT_RETENTION " : {
+    "mandatory" : false,
+    "type":"int",
+    "default": "-1"
+  },
+   "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN " : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "auto-generated"
+  },
+  
+}
+```
