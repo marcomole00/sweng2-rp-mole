@@ -167,14 +167,16 @@ The documentation of these variables is generally found on the registry itself, 
 
 An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture. It could be also a potentially costly error, since most of K8s clusters exist on a pay-per-use cloud environment.
 
-
 There is no automatic mechanism that inform the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 
 ## A Possible Solution
 
 This mechanism could be included in the development environment, for example as a LSP language server.
+
+The Language Server Protocol (LSP) is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
+
 The registries should offer an HTTP endpoint that replies with the configuration option of the requested image, in a machine readable format.
-Information about the configuration options could be:
+Information about the configuration options could be
 
 - If a value is mandatory or facultative (ie have a meaningful and/or well known default value).
 
@@ -201,18 +203,19 @@ Information about the configuration options could be:
 ```
 An example response for the image of the *postgres* database.
 
-This information is then  checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified. 
+This information is then checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified. 
 The results of this analysis are then shown to the user as warnings or error marks in the IDE.
 
 This solution provides very little overhead on the registry, due to the lightweight nature of the API structure.
 
 The advantages of implementing this "type checking" mechanism in the the development environment are:
 
-1. Highly portable to multiple types of development environment.
+1. Highly portable to multiple types of development environment, due to the high adoption of the LSP protocol.
 
-2. Easily extendible with more features and eventually adaptable to future changes in the language
+2. Easily extendible with more code analysis features and eventually adaptable to future changes in the language. An possible code analysis feature could be the check of existence of Pods with a certain label when defining a Service.
 
-3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze all different types of codebases.
+
+3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze codebases that rely on third party  External Secret Store providers.
 
 
 In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibilities of errors when deploying a big system with a lot of different components.
@@ -241,7 +244,7 @@ These are examples based on the most popular images taken from the public regist
 
 ``` json
 {
-  "image": "postgres:latest",
+  "image": "nginx:latest",
   "NGINX_ENVSUBST_TEMPLATE_DIR " : {
     "mandatory" : false,
     "type":"string",
