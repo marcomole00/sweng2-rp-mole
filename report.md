@@ -7,8 +7,8 @@ numbersections: true
 fontsize: 11pt
 listings: true
 toc-depth: 2
+links-as-notes: true
 ---
-
 
 
 
@@ -166,11 +166,11 @@ Most often, images require configuration through the use of environment variable
 The documentation of these variables is generally found on the registry itself, to be consulted by the developer when writing the specification of the Pod.
 
 Configuration errors could be caused by human error, or by the lack of documentation of the registry itself. 
-The effects of these errors could be result in a crash of the container, either immediate or after some time, or in a misbehaviour of the container.
-It also could be a security risk, since a misconfiguration of security parameters  could lead to the use of default credentials, or to the use of a non secure protocol. 
+The effects of these errors could be result in a crash of the container, either immediate or after some time, or in a misbehavior of the container.
+It also could be a security risk, since a misconfiguration of security parameters could lead to the use of default credentials, or to the use of a non secure protocol. 
 
 An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture. There is also an additional element of complexity due to the fact that the application is running inside a virtualized environment, and the failure could be caused by a misconfiguration of the container itself, or by a misconfiguration of the virtualized environment.
-The errors could be: the container crashes, the container boots but the application does not work as expected, the container boots but the application does not work at all.
+The errors could be: the container crashes, the container boots but the application does not work as expected, the container boots but the application does not work at all. These errors could also be caused by other factors, such as the network, the virtualized environment, the orchestration service, or the application itself. All these factors make the debugging process potentially very complex.
 
 It could be also a potentially costly error, since most of K8s clusters exist on a pay-per-use cloud environment.
 
@@ -181,7 +181,7 @@ There is no automatic mechanism that inform the developer if the configuration t
 The solution I propose is to provide a mechanism that allows the developer to check if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 This mechanism could be included in the development environment, for example as a LSP language server.
 
-The Language Server Protocol (LSP) is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
+The [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
 
 The registries should offer an HTTP endpoint that replies with the configuration option of the requested image, in a machine readable format.
 Information about the configuration options could be
@@ -211,8 +211,42 @@ Information about the configuration options could be
 ```
 An example response for the image of the *postgres* database.
 
+
+```mermaid
+sequenceDiagram
+    participant o as Developer
+    participant A as IDE
+    participant B as Language Server
+    participant C as Registry Endpoint
+    o->>A: Write Pod specification
+    A->>B: Notify Pod specification
+    B->>B: Analyze and parsing of the Pod specification
+    B->>C: Request configuration options
+    C->>B: Return configuration options
+    B->>A: Show configuration options
+```
+
+
 This information is then checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified. 
 The results of this analysis are then shown to the user as warnings or error marks in the IDE.
+
+Recall how kubernetes objects are structured. The PodSpec.containers.env object is a list of key-value pairs. The key is the name of the environment variable, and the value is the value of the environment variable. Environment variables must be defined as a string. 
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:  # PodSpec
+  containers: # PodSpec.containers
+  - name: nginx
+    image: nginx
+    env: # PodSpec.containers.env
+    - name: ENVIRONMENT 
+      value: "production"
+    - name: LOG_LEVEL
+      value: "INFO"
+```
 
 This solution provides very little overhead on the registry, due to the lightweight nature of the API structure.
 
@@ -224,6 +258,9 @@ The advantages of implementing this "type checking" mechanism in the the develop
 
 
 3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze codebases that rely on third party  External Secret Store providers.
+
+
+
 
 
 In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibilities of errors when deploying a big system with a lot of different components.
@@ -310,3 +347,5 @@ These are examples based on the most popular images taken from the public regist
   
 }
 ```
+
+
