@@ -165,12 +165,20 @@ When writing the specification of a Pod one can specify the container images to 
 Most often, images require configuration through the use of environment variables.
 The documentation of these variables is generally found on the registry itself, to be consulted by the developer when writing the specification of the Pod.
 
-An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture. It could be also a potentially costly error, since most of K8s clusters exist on a pay-per-use cloud environment.
+Configuration errors could be caused by human error, or by the lack of documentation of the registry itself. 
+The effects of these errors could be result in a crash of the container, either immediate or after some time, or in a misbehaviour of the container.
+It also could be a security risk, since a misconfiguration of security parameters  could lead to the use of default credentials, or to the use of a non secure protocol. 
+
+An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture. There is also an additional element of complexity due to the fact that the application is running inside a virtualized environment, and the failure could be caused by a misconfiguration of the container itself, or by a misconfiguration of the virtualized environment.
+The errors could be: the container crashes, the container boots but the application does not work as expected, the container boots but the application does not work at all.
+
+It could be also a potentially costly error, since most of K8s clusters exist on a pay-per-use cloud environment.
 
 There is no automatic mechanism that inform the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 
 ## A Possible Solution
 
+The solution I propose is to provide a mechanism that allows the developer to check if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 This mechanism could be included in the development environment, for example as a LSP language server.
 
 The Language Server Protocol (LSP) is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
