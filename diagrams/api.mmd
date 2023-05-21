@@ -1,0 +1,14 @@
+
+```mermaid
+sequenceDiagram
+    participant o as Developer
+    participant A as IDE
+    participant B as Language Server
+    participant C as Registry Endpoint
+    o->>A: Write Pod specification
+    A->>B: Notify Pod specification
+    B->>B: Analyze and parsing of the Pod specification
+    B->>C: Request configuration options
+    C->>B: Return configuration options
+    B->>A: Show configuration options
+```

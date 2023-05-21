@@ -6,7 +6,7 @@ toc: true
 numbersections: true
 fontsize: 11pt
 listings: true
-toc-depth: 2
+toc-depth: 3
 links-as-notes: true
 ---
 
@@ -178,16 +178,21 @@ There is no automatic mechanism that inform the developer if the configuration t
 
 ## A Possible Solution
 
+
+
+
+
 The solution I propose is to provide a mechanism that allows the developer to check if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 This mechanism could be included in the development environment, for example as a LSP language server.
 
 The [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
 
-The registries should offer an HTTP endpoint that replies with the configuration option of the requested image, in a machine readable format.
+### Protocol for the communication between the IDE and the registry
+
+The registries should offer an HTTP endpoint that replies with the configuration option of the requested image, in a machine readable format, to be consumed by the IDE.
 Information about the configuration options could be
 
 - If a value is mandatory or facultative (ie have a meaningful and/or well known default value).
-
 - Type of the configuration options : int, float, string , some other kind of structured data.
 
 ``` json
@@ -211,21 +216,13 @@ Information about the configuration options could be
 ```
 An example response for the image of the *postgres* database.
 
+\newpage
 
-```mermaid
-sequenceDiagram
-    participant o as Developer
-    participant A as IDE
-    participant B as Language Server
-    participant C as Registry Endpoint
-    o->>A: Write Pod specification
-    A->>B: Notify Pod specification
-    B->>B: Analyze and parsing of the Pod specification
-    B->>C: Request configuration options
-    C->>B: Return configuration options
-    B->>A: Show configuration options
-```
+The flow of the interaction between the parties is shown in the following sequence diagram.
 
+![ Sequence Diagram of the interaction between the parties ](./sweng2-rp-mole/diagrams/api.png)
+
+The developer writes the specification of the Pod in a YAML file, and the IDE sends a request to the registry to retrieve the configuration options of the specified image.
 
 This information is then checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified. 
 The results of this analysis are then shown to the user as warnings or error marks in the IDE.
@@ -248,6 +245,37 @@ spec:  # PodSpec
       value: "INFO"
 ```
 
+### Schema of the configuration options
+
+The schema of the configuration options is a JSON object that specifies the configuration options of the image, and the type of each configuration option. 
+
+The format of the schema could be generalized to this structure:
+
+```json
+{
+  "image" : "name of the image:version",
+  "example_of_mandatory_configuration_option" : {
+    "mandatory" : true,
+    "type":"type of the configuration option",
+  },
+  "example_of_facultative_configuration_option" : {
+    "mandatory" : false,
+    "type":"type of the configuration option",
+    "default": "default value of the configuration option"
+  },
+}
+```
+
+The type of the configuration option could be one of the following: string, number, path (ie a string that represents a path), boolean etc. More types definition could be added if needed.
+
+An interesting case is the case of the default value of a facultative configuration option. The default value could be a string, or it could be the value of another configuration option. In the latter case, the value of the default value should be a string that represents the name of the configuration option. This could be useful in the case of a configuration option that is facultative, but that has a default value that depends on the value of another configuration option.
+
+### Generation of the configuration schema
+
+The current status of documentation of the registries is that it is not machine readable. The documentation is written in a human readable format, and it is not possible to automatically generate the configuration file from the documentation. There is also a lack of standardization of the documentation format, since each registry has its own format, and there is no standard way to retrieve the documentation of an image.  Sometimes the documentation is in the image description of the registry, sometimes it's on the website of the application, sometimes it is in the README of the image repository.
+
+A possible way to ease the generation of the configuration schema is to ask the image maintainer to provide the configuration schema when they push the image to the registry. This could be done by providing a standard way to specify the configuration schema in the image description of the registry. 
+
 This solution provides very little overhead on the registry, due to the lightweight nature of the API structure.
 
 The advantages of implementing this "type checking" mechanism in the the development environment are:
@@ -258,9 +286,6 @@ The advantages of implementing this "type checking" mechanism in the the develop
 
 
 3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze codebases that rely on third party  External Secret Store providers.
-
-
-
 
 
 In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibilities of errors when deploying a big system with a lot of different components.
