@@ -165,12 +165,19 @@ When writing the specification of a Pod one can specify the container images to 
 Most often, images require configuration through the use of environment variables.
 The documentation of these variables is generally found on the registry itself, to be consulted by the developer when writing the specification of the Pod.
 
-Configuration errors could be caused by human error, or by the lack of documentation of the registry itself. 
-The effects of these errors could be result in a crash of the container, either immediate or after some time, or in a misbehavior of the container.
+Configuration errors could be caused by human error, either neglecting to read the documentation, or by misinterpreting it, or by the lack of documentation of the image itself.
+Misconfiguration could lead to the application not working as expected, or not working at all.
 It also could be a security risk, since a misconfiguration of security parameters could lead to the use of default credentials, or to the use of a non secure protocol. 
 
-An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture. There is also an additional element of complexity due to the fact that the application is running inside a virtualized environment, and the failure could be caused by a misconfiguration of the container itself, or by a misconfiguration of the virtualized environment.
-The errors could be: the container crashes, the container boots but the application does not work as expected, the container boots but the application does not work at all. These errors could also be caused by other factors, such as the network, the virtualized environment, the orchestration service, or the application itself. All these factors make the debugging process potentially very complex.
+An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture. There is also an additional element of complexity due to the fact that the application is running inside a virtualized environment, and the failure could be caused by a misconfiguration of the container itself.
+
+The manifestations of these errors are mainly two: the application does not work as expected, or it does not work at all.
+The first case happens when the misconfiguration is not critical, and the application is still able to run, but with some functionalities not working as expected. For example, the application could be running with some default configuration that does not expose all the functionalities of the application.
+
+The second case happens when the misconfiguration is critical, and the application is not able to run at all. For example, no credentials are provided to the application, and the application is not able to connect to the database.
+
+In both cases, the developer has to debug the application to find the cause of the error, and then fix it. This is a time consuming process, since the developer has to find the cause of the error, and then fix it.
+
 
 It could be also a potentially costly error, since most of K8s clusters exist on a pay-per-use cloud environment.
 
@@ -178,24 +185,42 @@ There is no automatic mechanism that inform the developer if the configuration t
 
 ## A Possible Solution
 
-
-
-
-
-The solution I propose is to provide a mechanism that allows the developer to check if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 This mechanism could be included in the development environment, for example as a LSP language server.
+The solution I propose is to provide a mechanism that allows the developer to check if the configuration they have written satisfies some minimum configuration requirements, defined by the maintainer of the image. This minimum configuration schema is stored in the registry, and is accessible by the developer's IDE when writing the specification of the Pod. The developer can then check if the configuration they have written satisfies the minimum configuration requirements, and if not, the IDE will inform the developer of the missing configuration options, and the type of the configuration options.
 
 The [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
 
-### Protocol for the communication between the IDE and the registry
+### Schema of the configuration options
 
-The registries should offer an HTTP endpoint that replies with the configuration option of the requested image, in a machine readable format, to be consumed by the IDE.
-Information about the configuration options could be
+The schema of the configuration options is a JSON object that specifies the configuration options of the image, and the type of each configuration option.  The schema should contain information about the mandatory configuration options, and the facultative configuration options. The schema should also contain information about the default value of the facultative configuration options.
 
-- If a value is mandatory or facultative (ie have a meaningful and/or well known default value).
-- Type of the configuration options : int, float, string , some other kind of structured data.
 
-``` json
+\newpage 
+
+The format of the schema could be generalized to this structure:
+
+```json
+{
+  "image" : "name of the image:version",
+  "example_of_mandatory_configuration_option" : {
+    "mandatory" : true,
+    "type":"type of the configuration option",
+  },
+  "example_of_facultative_configuration_option" : {
+    "mandatory" : false,
+    "type":"type of the configuration option",
+    "default": "default value of the configuration option"
+  },
+}
+```
+
+The type of the configuration option could be one of the following: string, number, path (ie a string that represents a path), boolean etc. More types definition could be added if needed.
+
+An interesting case is the case of the default value of a facultative configuration option. The default value could be a string, or it could be the value of another configuration option. In the latter case, the value of the default value should be a string that represents the name of the configuration option, preceded by the *\$* symbol. The *\$* symbol is used to express that the default value is the value of another configuration option.
+
+This could be useful in the case of a configuration option that is facultative, but that has a default value that depends on the value of another configuration option. This is the case of the configuration options of the postgres image, where the default value of the POSTGRES_DB configuration option is the value of the POSTGRES_USER configuration option.
+
+```json
 {
   "image": "postgres:latest",
   "POSTGRES_PASSWORD" : {
@@ -210,19 +235,25 @@ Information about the configuration options could be
   "POSTGRES_DB" : {
     "mandatory" : false,
     "type":"string",
-    "default": "Value of POSTGRES_USER"
+    "default": "$POSTGRES_USER"
   }
 }
 ```
-An example response for the image of the *postgres* database.
 
-\newpage
+Another case is when the default value of a facultative configuration option is a random and auto-generated value. In this case, the value of the default value is written as "!random". An example of this is the DOCKER_INFLUXDB_INIT_ADMIN_TOKEN variable, which can be found in the example section.
+
+
+### Protocol for the communication between the IDE and the registry
+
+The registries should offer an HTTP endpoint that replies with the configuration schema of the requested image, to be consumed by the IDE.
 
 The flow of the interaction between the parties is shown in the following sequence diagram.
 
 ![ Sequence Diagram of the interaction between the parties ](./sweng2-rp-mole/diagrams/api.png)
 
 The developer writes the specification of the Pod in a YAML file, and the IDE sends a request to the registry to retrieve the configuration options of the specified image.
+
+This solution provides very little overhead on the registry, since the registry only has to reply to the request of the IDE with the configuration schema of the requested image. The registry does not have to store any additional information, since the configuration schema is stored in the registry as a JSON object.
 
 This information is then checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified. 
 The results of this analysis are then shown to the user as warnings or error marks in the IDE.
@@ -245,38 +276,13 @@ spec:  # PodSpec
       value: "INFO"
 ```
 
-### Schema of the configuration options
-
-The schema of the configuration options is a JSON object that specifies the configuration options of the image, and the type of each configuration option. 
-
-The format of the schema could be generalized to this structure:
-
-```json
-{
-  "image" : "name of the image:version",
-  "example_of_mandatory_configuration_option" : {
-    "mandatory" : true,
-    "type":"type of the configuration option",
-  },
-  "example_of_facultative_configuration_option" : {
-    "mandatory" : false,
-    "type":"type of the configuration option",
-    "default": "default value of the configuration option"
-  },
-}
-```
-
-The type of the configuration option could be one of the following: string, number, path (ie a string that represents a path), boolean etc. More types definition could be added if needed.
-
-An interesting case is the case of the default value of a facultative configuration option. The default value could be a string, or it could be the value of another configuration option. In the latter case, the value of the default value should be a string that represents the name of the configuration option. This could be useful in the case of a configuration option that is facultative, but that has a default value that depends on the value of another configuration option.
-
 ### Generation of the configuration schema
 
 The current status of documentation of the registries is that it is not machine readable. The documentation is written in a human readable format, and it is not possible to automatically generate the configuration file from the documentation. There is also a lack of standardization of the documentation format, since each registry has its own format, and there is no standard way to retrieve the documentation of an image.  Sometimes the documentation is in the image description of the registry, sometimes it's on the website of the application, sometimes it is in the README of the image repository.
 
 A possible way to ease the generation of the configuration schema is to ask the image maintainer to provide the configuration schema when they push the image to the registry. This could be done by providing a standard way to specify the configuration schema in the image description of the registry. 
 
-This solution provides very little overhead on the registry, due to the lightweight nature of the API structure.
+### Conclusion
 
 The advantages of implementing this "type checking" mechanism in the the development environment are:
 
@@ -317,7 +323,7 @@ These are examples based on the most popular images taken from the public regist
   "image": "nginx:latest",
   "NGINX_ENVSUBST_TEMPLATE_DIR " : {
     "mandatory" : false,
-    "type":"string",
+    "type":"path",
     "default" : "/etc/nginx/templates"
   },
   "NGINX_ENVSUBST_TEMPLATE_SUFFIX " : {
@@ -327,7 +333,7 @@ These are examples based on the most popular images taken from the public regist
   },
   "NGINX_ENVSUBST_OUTPUT_DIR " : {
     "mandatory" : false,
-    "type":"string",
+    "type":"path",
     "default": "/etc/nginx/conf.d"
   },
 
@@ -367,7 +373,7 @@ These are examples based on the most popular images taken from the public regist
    "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN " : {
     "mandatory" : false,
     "type":"string",
-    "default": "auto-generated"
+    "default": "!random" // random string
   },
   
 }
