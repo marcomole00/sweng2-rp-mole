@@ -243,6 +243,24 @@ This could be useful in the case of a configuration option that is facultative, 
 Another case is when the default value of a facultative configuration option is a random and auto-generated value. In this case, the value of the default value is written as "!random". An example of this is the DOCKER_INFLUXDB_INIT_ADMIN_TOKEN variable, which can be found in the example section.
 
 
+#### Another proposal for the notion of type in this context using regular expressions
+
+An alternative to strictly defining the type of the configuration option is to define a regular expression that the value of the configuration option should satisfy. This could be useful in the case of a configuration option that is a string, but that has to satisfy some constraints. For example, the value of the configuration option could be a string that represents a path, and the regular expression could be used to check if the string is a valid path.
+
+So, for example, instead of defining the type of the configuration option as "path", the type of the configuration option could be defined as a regular expression that represents a valid path, like: 
+
+string = [^\s]* // multiple definition could be possible, this a regex that matches any string that does not contain any whitespace character (space, tab, newline etc.)
+
+number = [0-9]+ // multiple definition could be possible, this a regex that matches any string that contains only numbers
+
+float = [0-9]+.[0-9]+ // multiple definition could be possible, this a regex that matches any string that contains only numbers and a dot
+
+path = ^\/([A-z0-9\/\-\_]+)\/$ // multiple definition could be possible, this a regex that matches any string that represents a  valid unix path
+
+boolean = true|false // multiple definition could be possible, this a regex that matches any string that represents a boolean value
+
+
+
 ### Protocol for the communication between the IDE and the registry
 
 The registries should offer an HTTP endpoint that replies with the configuration schema of the requested image, to be consumed by the IDE.
@@ -276,12 +294,35 @@ spec:  # PodSpec
       value: "INFO"
 ```
 
+#### How the Language Server checks the configuration options
+
+The [Language Server Protocol specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) provides a set of methods that the IDE can use to communicate with the Language Server. The methods that are used in this context are:
+
+- initialize: The initialize request is sent as the first request from the client to the server.
+
+- initialized: The initialized notification is sent from the client to the server after the client received the result of the initialize request but before the client is sending any other request or notification to the server.
+
+- textDocument/didOpen: The document open notification is sent from the client to the server to signal newly opened text documents.
+
+- textDocument/didChange: The document change notification is sent from the client to the server to signal changes to a text document.
+
+- textDocument/publishDiagnostics: Diagnostics notification are sent from the server to the client to signal results of validation runs.
+
+
+The language server when receives the initialize request from the IDE, it sends back the initialized notification. The IDE then sends the textDocument/didOpen request to the language server, which contains the content of the YAML file. The language server then parses the YAML file, and extracts the image name and tag. The language server then sends a request to the registry to retrieve the configuration schema of the specified image. The registry replies with the configuration schema of the image, and the language server then checks the configuration options of the YAML file against the configuration schema of the image. The results of this analysis are then sent to the IDE as a textDocument/publishDiagnostics notification.
+
+The same procedure is followed when the user changes the content of the YAML file, which is notified by the IDE sending a textDocument/didChange request to the language server, which contains the changes applied to the YAML file.
+
+For determining the registry of an image, the language server uses the same criteria as the docker and kubernetes clients. The language server first checks if the image name contains a registry address. If it does then it uses that registry. If it does not, then it assumes that the image is stored in Docker Hub.
+
+
 ### Generation of the configuration schema
 
-The current status of documentation of the registries is that it is not machine readable. The documentation is written in a human readable format, and it is not possible to automatically generate the configuration file from the documentation. There is also a lack of standardization of the documentation format, since each registry has its own format, and there is no standard way to retrieve the documentation of an image.  Sometimes the documentation is in the image description of the registry, sometimes it's on the website of the application, sometimes it is in the README of the image repository.
+The current status of documentation of the registries is that it is not machine readable. The documentation is written in a human readable format, and it is not possible to automatically generate the configuration file from the documentation. There is also a lack of standardization of the documentation format, since each registry has its own format, and there is no standard way to retrieve the documentation of an image.  Sometimes the documentation is in the image description of the registry, sometimes it's on the website of the application, sometimes it is in the README of the image source code repository.
 
 A possible way to ease the generation of the configuration schema is to ask the image maintainer to provide the configuration schema when they push the image to the registry. This could be done by providing a standard way to specify the configuration schema in the image description of the registry. 
 
+I've only looked at Docker Hub, being one of the most popular public registries, that has also searching and filtering capabilities. Docker Hub allows the user to search for images by name and tags. The description of the image is just a free text field.
 ### Conclusion
 
 The advantages of implementing this "type checking" mechanism in the the development environment are:
