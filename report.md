@@ -10,8 +10,6 @@ toc-depth: 3
 links-as-notes: true
 ---
 
-
-
 # Introduction
 
 
@@ -242,24 +240,53 @@ This could be useful in the case of a configuration option that is facultative, 
 
 Another case is when the default value of a facultative configuration option is a random and auto-generated value. In this case, the value of the default value is written as "!random". An example of this is the DOCKER_INFLUXDB_INIT_ADMIN_TOKEN variable, which can be found in the example section.
 
+| default value | meaning |
+| --- | --- |
+| $configuration_option | the default value is the value of the configuration option |
+| !random | the default value is a random and auto-generated value |
+
+Table: special meaning of the default value of a facultative configuration option
 
 #### Another proposal for the notion of type in this context using regular expressions
 
 An alternative to strictly defining the type of the configuration option is to define a regular expression that the value of the configuration option should satisfy. This could be useful in the case of a configuration option that is a string, but that has to satisfy some constraints. For example, the value of the configuration option could be a string that represents a path, and the regular expression could be used to check if the string is a valid path.
 
-So, for example, instead of defining the type of the configuration option as "path", the type of the configuration option could be defined as a regular expression that represents a valid path, like: 
+This can be extended to other types, such as numbers, floats, booleans, domains, ipv4, ipv6, urls etc. The following table shows some examples of types and their corresponding regular expressions.
 
-string = [^\s]* // multiple definition could be possible, this a regex that matches any string that does not contain any whitespace character (space, tab, newline etc.)
+Type     regex  
+------   ---- 
+string   .*
+number   [0-9]+
+float    [0-9]+.[0-9]+
+path     ^\/([A-z0-9\/\-\_]+)\/$
+boolean  true|false
+domain   ^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$
+ipv4     ^([0-9]{1,3}\.){3}[0-9]{1,3}$
+ipv6     ^([0-9a-f]{1,4}:){7}([0-9a-f]){1,4}$
+url      [-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?
 
-number = [0-9]+ // multiple definition could be possible, this a regex that matches any string that contains only numbers
+Table: Some examples of types and their corresponding regular expressions
 
-float = [0-9]+.[0-9]+ // multiple definition could be possible, this a regex that matches any string that contains only numbers and a dot
+This approach is more flexible than the previous one, since it allows to define the type of the configuration option in a more precise way. However, it is also more complex, since it requires the definition of a regular expression for each type of configuration option. This could be a problem in the case of complex types, like the url type. In this case, the regular expression is very complex, and it is not easy to understand what it does.
 
-path = ^\/([A-z0-9\/\-\_]+)\/$ // multiple definition could be possible, this a regex that matches any string that represents a  valid unix path
+Another use case of this approach could be to enforce password complexity. For example, the password could be a string that contains at least one uppercase letter, one lowercase letter, one number and one special character. This could be enforced by using a regular expression that matches this pattern.
 
-boolean = true|false // multiple definition could be possible, this a regex that matches any string that represents a boolean value
+If the regex approach is used, the schema of the configuration options could be generalized to this structure:
 
-
+```json
+{
+  "image" : "name of the image:version",
+  "example_of_mandatory_configuration_option" : {
+    "mandatory" : true,
+    "regex":"regular expression that the value of the configuration option should satisfy",
+  },
+  "example_of_facultative_configuration_option" : {
+    "mandatory" : false,
+    "regex":"regular expression that the value of the configuration option should satisfy",
+    "default": "default value of the configuration option"
+  },
+}
+```
 
 ### Protocol for the communication between the IDE and the registry
 
@@ -315,7 +342,6 @@ The same procedure is followed when the user changes the content of the YAML fil
 
 For determining the registry of an image, the language server uses the same criteria as the docker and kubernetes clients. The language server first checks if the image name contains a registry address. If it does then it uses that registry. If it does not, then it assumes that the image is stored in Docker Hub.
 
-
 ### Generation of the configuration schema
 
 The current status of documentation of the registries is that it is not machine readable. The documentation is written in a human readable format, and it is not possible to automatically generate the configuration file from the documentation. There is also a lack of standardization of the documentation format, since each registry has its own format, and there is no standard way to retrieve the documentation of an image.  Sometimes the documentation is in the image description of the registry, sometimes it's on the website of the application, sometimes it is in the README of the image source code repository.
@@ -323,7 +349,12 @@ The current status of documentation of the registries is that it is not machine 
 A possible way to ease the generation of the configuration schema is to ask the image maintainer to provide the configuration schema when they push the image to the registry. This could be done by providing a standard way to specify the configuration schema in the image description of the registry. 
 
 I've only looked at Docker Hub, being one of the most popular public registries, that has also searching and filtering capabilities. Docker Hub allows the user to search for images by name and tags. The description of the image is just a free text field.
+
 ### Conclusion
+
+We have seen how a misconfiguration of environment variables could lead to difficult to debug crashes or misbehaviours of the application. We have also seen how the current solutions to this problem are not satisfactory, since they are not able to detect misconfigurations of environment variables at development time.
+In this report I've proposed a solution to the problem of the lack of type checking of environment variables in the declarative language of kubernetes. The solution is based on the Language Server Protocol, which is a protocol that is used by most of the popular IDEs. The solution is based on the idea of providing a configuration schema of the image to the IDE, which is then used to check the configuration options of the YAML file against the configuration schema of the image. The configuration schema is retrieved from the registry of the image, which is then sent to the IDE as a JSON object. The IDE then uses the configuration schema to check the configuration options of the YAML file against the configuration schema of the image. The results of this analysis are then shown to the user as warnings or error marks in the IDE.
+
 
 The advantages of implementing this "type checking" mechanism in the the development environment are:
 
@@ -331,12 +362,10 @@ The advantages of implementing this "type checking" mechanism in the the develop
 
 2. Easily extendible with more code analysis features and eventually adaptable to future changes in the language. An possible code analysis feature could be the check of existence of Pods with a certain label when defining a Service.
 
-
 3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze codebases that rely on third party  External Secret Store providers.
 
 
 In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibilities of errors when deploying a big system with a lot of different components.
-
 
 ## Examples 
 
