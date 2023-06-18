@@ -6,7 +6,7 @@ toc: true
 numbersections: true
 fontsize: 11pt
 listings: true
-toc-depth: 3
+toc-depth: 5
 links-as-notes: true
 ---
 
@@ -249,27 +249,27 @@ Table: special meaning of the default value of a facultative configuration optio
 
 #### Another proposal for the notion of type in this context using regular expressions
 
-An alternative to strictly defining the type of the configuration option is to define a regular expression that the value of the configuration option should satisfy. This could be useful in the case of a configuration option that is a string, but that has to satisfy some constraints. For example, the value of the configuration option could be a string that represents a path, and the regular expression could be used to check if the string is a valid path.
+An alternative to strictly defining the type of the configuration option is to define a regular expression that the value of the configuration option should satisfy. This could be useful in the case of a configuration option that is a string, but that has to satisfy some constraints.
 
 This can be extended to other types, such as numbers, floats, booleans, domains, ipv4, ipv6, urls etc. The following table shows some examples of types and their corresponding regular expressions.
 
 Type     regex  
-------   ---- 
-string   .*
-number   [0-9]+
-float    [0-9]+.[0-9]+
-path     ^\/([A-z0-9\/\-\_]+)\/$
-boolean  true|false
-domain   ^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$
-ipv4     ^([0-9]{1,3}\.){3}[0-9]{1,3}$
-ipv6     ^([0-9a-f]{1,4}:){7}([0-9a-f]){1,4}$
-url      [-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?
+------     ---- 
+string     .*
+number     [0-9]+
+float      [0-9]+.[0-9]+
+unix path  \/([A-z0-9\/\-\_]+)\/$
+boolean    true|false
+domain     ^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$
+ipv4       ^([0-9]{1,3}\.){3}[0-9]{1,3}$
+ipv6       ^([0-9a-f]{1,4}:){7}([0-9a-f]){1,4}$
+url        [-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?
 
 Table: Some examples of types and their corresponding regular expressions
 
 This approach is more flexible than the previous one, since it allows to define the type of the configuration option in a more precise way. However, it is also more complex, since it requires the definition of a regular expression for each type of configuration option. This could be a problem in the case of complex types, like the url type. In this case, the regular expression is very complex, and it is not easy to understand what it does.
 
-Another use case of this approach could be to enforce password complexity. For example, the password could be a string that contains at least one uppercase letter, one lowercase letter, one number and one special character. This could be enforced by using a regular expression that matches this pattern.
+Some cases where this approach could be useful are enforcing password complexity, or enforcing the format of a path.
 
 If the regex approach is used, the schema of the configuration options could be generalized to this structure:
 
@@ -278,15 +278,16 @@ If the regex approach is used, the schema of the configuration options could be 
   "image" : "name of the image:version",
   "example_of_mandatory_configuration_option" : {
     "mandatory" : true,
-    "regex":"regular expression that the value of the configuration option should satisfy",
+    "regex":"regular expression that the value  should satisfy",
   },
   "example_of_facultative_configuration_option" : {
     "mandatory" : false,
-    "regex":"regular expression that the value of the configuration option should satisfy",
+    "regex":"regular expression that the value should satisfy",
     "default": "default value of the configuration option"
   },
 }
 ```
+Either the type approach or the regex approach could be used. The type approach is simpler, but it is also less flexible. The regex approach is more complex, but it is also more flexible.
 
 ### Protocol for the communication between the IDE and the registry
 
@@ -321,6 +322,19 @@ spec:  # PodSpec
       value: "INFO"
 ```
 
+
+#### API for the communication between the IDE and the registry
+
+The registries should offer an HTTP endpoint that replies with the configuration schema of the requested image.
+
+The specification of the API should fit in the already existing API of the registries, [I'm taking Docker Hub as an example.](https://docs.docker.com/registry/spec/api/). The API should be implemented as a new endpoint of the registry API, that is:
+
+- GET /v2/ \<name> / schema
+  - name: name of the image
+
+The response of the API should be a JSON object that contains the configuration schema of the image as described in the previous section. 
+
+
 #### How the Language Server checks the configuration options
 
 The [Language Server Protocol specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) provides a set of methods that the IDE can use to communicate with the Language Server. The methods that are used in this context are:
@@ -340,7 +354,8 @@ The language server when receives the initialize request from the IDE, it sends 
 
 The same procedure is followed when the user changes the content of the YAML file, which is notified by the IDE sending a textDocument/didChange request to the language server, which contains the changes applied to the YAML file.
 
-For determining the registry of an image, the language server uses the same criteria as the docker and kubernetes clients. The language server first checks if the image name contains a registry address. If it does then it uses that registry. If it does not, then it assumes that the image is stored in Docker Hub.
+For determining  on which registry the image is stored, the language server uses the same criteria as the docker and kubernetes clients. The language server first checks if the image name contains a registry address. If it does then it uses that registry. If it does not, then it assumes that the image is stored in Docker Hub.
+
 
 ### Generation of the configuration schema
 
@@ -350,26 +365,11 @@ A possible way to ease the generation of the configuration schema is to ask the 
 
 I've only looked at Docker Hub, being one of the most popular public registries, that has also searching and filtering capabilities. Docker Hub allows the user to search for images by name and tags. The description of the image is just a free text field.
 
-### Conclusion
-
-We have seen how a misconfiguration of environment variables could lead to difficult to debug crashes or misbehaviours of the application. We have also seen how the current solutions to this problem are not satisfactory, since they are not able to detect misconfigurations of environment variables at development time.
-In this report I've proposed a solution to the problem of the lack of type checking of environment variables in the declarative language of kubernetes. The solution is based on the Language Server Protocol, which is a protocol that is used by most of the popular IDEs. The solution is based on the idea of providing a configuration schema of the image to the IDE, which is then used to check the configuration options of the YAML file against the configuration schema of the image. The configuration schema is retrieved from the registry of the image, which is then sent to the IDE as a JSON object. The IDE then uses the configuration schema to check the configuration options of the YAML file against the configuration schema of the image. The results of this analysis are then shown to the user as warnings or error marks in the IDE.
-
-
-The advantages of implementing this "type checking" mechanism in the the development environment are:
-
-1. Highly portable to multiple types of development environment, due to the high adoption of the LSP protocol.
-
-2. Easily extendible with more code analysis features and eventually adaptable to future changes in the language. An possible code analysis feature could be the check of existence of Pods with a certain label when defining a Service.
-
-3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze codebases that rely on third party  External Secret Store providers.
-
-
-In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibilities of errors when deploying a big system with a lot of different components.
 
 ## Examples 
 
-These are examples based on the most popular images taken from the public registry of [Docker](https://hub.docker.com).
+These are examples based on some of the most popular images taken from the public registry of [Docker](https://hub.docker.com).
+These examples were chosen because they were in the most pulled images list of Docker Hub and they have a configuration schema that is neither empty or too big.
 
 ### mongoDB
 ``` json
@@ -450,3 +450,19 @@ These are examples based on the most popular images taken from the public regist
 ```
 
 
+## Conclusion
+
+We have seen how a misconfiguration of environment variables could lead to difficult to debug crashes or misbehaviours of the application. We have also seen how the current solutions to this problem are not satisfactory, since they are not able to detect misconfigurations of environment variables at development time.
+In this report I've proposed a solution to the problem of the lack of type checking of environment variables in the declarative language of kubernetes. The solution is based on the Language Server Protocol, which is a protocol that is used by most of the popular IDEs. The solution is based on the idea of providing a configuration schema of the image to the IDE, which is then used to check the configuration options of the YAML file against the configuration schema of the image. The configuration schema is retrieved from the registry of the image, which is then sent to the IDE as a JSON object. The IDE then uses the configuration schema to check the configuration options of the YAML file against the configuration schema of the image. The results of this analysis are then shown to the user as warnings or error marks in the IDE.
+
+
+The advantages of implementing this "type checking" mechanism in the the development environment are:
+
+1. Highly portable to multiple types of development environment, due to the high adoption of the LSP protocol.
+
+2. Easily extendible with more code analysis features and eventually adaptable to future changes in the language. An possible code analysis feature could be the check of existence of Pods with a certain label when defining a Service.
+
+3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze codebases that rely on third party  External Secret Store providers.
+
+
+In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibilities of errors when deploying a big system with a lot of different components.
