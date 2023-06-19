@@ -452,15 +452,15 @@ These examples were chosen because they were in the most pulled images list of D
 
 ## Conclusion
 
-We have seen how a misconfiguration of environment variables could lead to difficult to debug crashes or misbehaviours of the application. We have also seen how the current solutions to this problem are not satisfactory, since they are not able to detect misconfigurations of environment variables at development time.
-In this report I've proposed a solution to the problem of the lack of type checking of environment variables in the declarative language of kubernetes. The solution is based on the Language Server Protocol, which is a protocol that is used by most of the popular IDEs. The solution is based on the idea of providing a configuration schema of the image to the IDE, which is then used to check the configuration options of the YAML file against the configuration schema of the image. The configuration schema is retrieved from the registry of the image, which is then sent to the IDE as a JSON object. The IDE then uses the configuration schema to check the configuration options of the YAML file against the configuration schema of the image. The results of this analysis are then shown to the user as warnings or error marks in the IDE.
+We have seen how a misconfiguration of environment variables could lead to difficult to debug crashes or misbehaviours of the application.
+In this report I've proposed a solution to the problem of the lack of type checking of environment variables in the declarative language of kubernetes. The solution is based on the Language Server Protocol, which is a protocol that is used by most of the popular IDEs. The solution is based on the idea of generating the configuration schema of an image from the documentation of the image. The configuration schema is then stored on the registry, and it is retrieved by the language server when the user is writing the YAML file. The language server then checks the configuration options of the YAML file against the configuration schema of the image, and it notifies the user of any errors or warnings.
 
 
 The advantages of implementing this "type checking" mechanism in the the development environment are:
 
 1. Highly portable to multiple types of development environment, due to the high adoption of the LSP protocol.
 
-2. Easily extendible with more code analysis features and eventually adaptable to future changes in the language. An possible code analysis feature could be the check of existence of Pods with a certain label when defining a Service.
+2. Easily extendible with more code analysis features and eventually adaptable to future changes in the language. A possible code analysis feature could be the check of existence of Pods with a certain label when defining a Service.
 
 3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze codebases that rely on third party  External Secret Store providers.
 
