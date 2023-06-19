@@ -240,12 +240,12 @@ This could be useful in the case of a configuration option that is facultative, 
 
 Another case is when the default value of a facultative configuration option is a random and auto-generated value. In this case, the value of the default value is written as "!random". An example of this is the DOCKER_INFLUXDB_INIT_ADMIN_TOKEN variable, which can be found in the example section.
 
-| default value | meaning |
+| Default value | Meaning |
 | --- | --- |
-| $configuration_option | the default value is the value of the configuration option |
+| $configuration_option | the default value is the value of  configuration_option |
 | !random | the default value is a random and auto-generated value |
 
-Table: special meaning of the default value of a facultative configuration option
+Table: Special meaning of the default value of a facultative configuration option
 
 #### Another proposal for the notion of type in this context using regular expressions
 
@@ -253,7 +253,7 @@ An alternative to strictly defining the type of the configuration option is to d
 
 This can be extended to other types, such as numbers, floats, booleans, domains, ipv4, ipv6, urls etc. The following table shows some examples of types and their corresponding regular expressions.
 
-Type     regex  
+Type       regex  
 ------     ---- 
 string     .*
 number     [0-9]+
@@ -287,7 +287,8 @@ If the regex approach is used, the schema of the configuration options could be 
   },
 }
 ```
-Either the type approach or the regex approach could be used. The type approach is simpler, but it is also less flexible. The regex approach is more complex, but it is also more flexible.
+Either the type approach or the regex approach could be used. The type approach is simpler, but it is also less flexible.
+In my research, I couldn't find any example of an image that requires a complex type that requires a regular expression to be defined. For this reason, I included both approaches in this document, but I will use the type approach in the rest of the document. I think nevertheless that the regex approach could be useful in some cases, like the ones mentioned above.
 
 ### Protocol for the communication between the IDE and the registry
 
@@ -299,7 +300,7 @@ The flow of the interaction between the parties is shown in the following sequen
 
 The developer writes the specification of the Pod in a YAML file, and the IDE sends a request to the registry to retrieve the configuration options of the specified image.
 
-This solution provides very little overhead on the registry, since the registry only has to reply to the request of the IDE with the configuration schema of the requested image. The registry does not have to store any additional information, since the configuration schema is stored in the registry as a JSON object.
+This solution provides very little overhead on the registry, since the registry only has to reply to the request of the Language Server with the configuration schema of the requested image. 
 
 This information is then checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified. 
 The results of this analysis are then shown to the user as warnings or error marks in the IDE.
