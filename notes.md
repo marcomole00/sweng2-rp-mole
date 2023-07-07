@@ -1,0 +1,14 @@
+- rivedere la struttura 
+  - k8s è un capitolo
+  - problema capitolo a parte
+  - soluzione capitolo a parte
+  - conclusione stesso livello di soluzione
+- riscrivere l'introduzione
+- spiegare meglio perchè regex non va bene
+- spiegare cos'è declarative / dare una definzione / dire perchè è utile avere il linguaggetto
+
+- più commento sugli esempi
+- slide per 30 minuti
+- mandare documnento prima
+- 20 luglio
+-  
