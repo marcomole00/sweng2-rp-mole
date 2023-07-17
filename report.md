@@ -13,11 +13,14 @@ margin-left: 2.5cm
 
 # Introduction
 
+In this report I'll explore how Kubernetes uses a declarative language to define the desired state of the system. I'll also discuss the limitations of the current state of tools for writing and managing Kubernetes manifests, and propose a solution to address these limitations.
+
+In general terms a declarative language is a programming language that expresses the desired state of the system rather than the steps required to achieve that state. This is in contrast to an imperative language, which expresses the steps required to achieve the desired state. 
+
+In the context of Kubernetes, the declarative language is used to define the desired state of the system, which is then used by the Kubernetes control plane to automatically manage the system and ensure that the desired state is achieved and maintained. This approach has several advantages over an imperative approach, including the ability to easily scale the system up or down based on demand, as well as the ability to automatically recover from failures.
+
 
 # What is Kubernetes
-
-
-Kubernetes, also known as K8s, is an open-source container orchestration platform designed to automate the deployment, scaling, and management of containerized applications. Originally developed by Google and later donated to the Cloud Native Computing Foundation, Kubernetes is now widely used in cloud computing environments to manage the deployment of containerized applications across a cluster of nodes.
 
 At its core, Kubernetes operates by organizing containers into logical units called pods, which are then deployed and managed as a single entity. These pods are designed to be highly portable and can be deployed across a range of cloud and on-premises environments, enabling organizations to build and deploy applications in a way that is both scalable and cost-effective.
 
@@ -26,11 +29,6 @@ One of the key benefits of Kubernetes is its ability to automate many of the tas
 Overall, Kubernetes represents a significant advancement in the field of container orchestration, providing developers and operations teams with a powerful tool for managing containerized applications at scale. As such, it has become an essential technology for organizations looking to leverage the benefits of containerization and cloud computing to build more agile, scalable, and resilient applications.
 
 The Kubernetes configuration language is expressed in YAML or JSON format, and it consists of a set of declarative statements that describe the desired state of the Kubernetes resources. These statements include specifications for the containers that run within the resources, as well as other settings such as environment variables, ports, and volumes. Being declarative, the configuration language does not specify how the desired state should be achieved, but rather what the desired state is. This allows Kubernetes to automatically manage the resources and ensure that the desired state is achieved and maintained. For example, if a container crashes or becomes unresponsive, Kubernetes will automatically restart it to ensure that the desired state is maintained. Similarly, if a node fails, Kubernetes will automatically reschedule the pods that were running on that node to ensure that the desired state is maintained. 
-
-
-
-In this report I'll explore how the declarative language is used to define the main kubernetes objects. Then I'll propose a mechanism for simplifying the process of writing correct configurations of Pods.
-
 
 
 ## How kubernetes works
@@ -45,7 +43,8 @@ Kubernetes also provides several key features that make it easy to manage contai
 
 
 ## Main components
-In this section I'll provide a more detailed explanation of the most important components.
+
+In this section I'll provide a more detailed explanation of the building blocks of Kubernetes, like pods, deployments, services, volumes. This is just a brief overview of the foundational objects of Kubernetes, and it is skipping more complex objects like StatefulSets, DaemonSets, Jobs, Ingress, etc. This is because the focus of this report is on the language used to define the desired state of the system, rather than on the system itself.
 
 ### Pods
 
