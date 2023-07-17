@@ -14,6 +14,9 @@ margin-left: 2.5cm
 # Introduction
 
 
+# What is Kubernetes
+
+
 Kubernetes, also known as K8s, is an open-source container orchestration platform designed to automate the deployment, scaling, and management of containerized applications. Originally developed by Google and later donated to the Cloud Native Computing Foundation, Kubernetes is now widely used in cloud computing environments to manage the deployment of containerized applications across a cluster of nodes.
 
 At its core, Kubernetes operates by organizing containers into logical units called pods, which are then deployed and managed as a single entity. These pods are designed to be highly portable and can be deployed across a range of cloud and on-premises environments, enabling organizations to build and deploy applications in a way that is both scalable and cost-effective.
@@ -22,9 +25,13 @@ One of the key benefits of Kubernetes is its ability to automate many of the tas
 
 Overall, Kubernetes represents a significant advancement in the field of container orchestration, providing developers and operations teams with a powerful tool for managing containerized applications at scale. As such, it has become an essential technology for organizations looking to leverage the benefits of containerization and cloud computing to build more agile, scalable, and resilient applications.
 
-The Kubernetes configuration language is expressed in YAML or JSON format, and it consists of a set of declarative statements that describe the desired state of the Kubernetes resources. These statements include specifications for the containers that run within the resources, as well as other settings such as environment variables, ports, and volumes.
+The Kubernetes configuration language is expressed in YAML or JSON format, and it consists of a set of declarative statements that describe the desired state of the Kubernetes resources. These statements include specifications for the containers that run within the resources, as well as other settings such as environment variables, ports, and volumes. Being declarative, the configuration language does not specify how the desired state should be achieved, but rather what the desired state is. This allows Kubernetes to automatically manage the resources and ensure that the desired state is achieved and maintained. For example, if a container crashes or becomes unresponsive, Kubernetes will automatically restart it to ensure that the desired state is maintained. Similarly, if a node fails, Kubernetes will automatically reschedule the pods that were running on that node to ensure that the desired state is maintained. 
+
+
 
 In this report I'll explore how the declarative language is used to define the main kubernetes objects. Then I'll propose a mechanism for simplifying the process of writing correct configurations of Pods.
+
+
 
 ## How kubernetes works
 
@@ -37,10 +44,10 @@ The Kubernetes control plane consists of several components, including the API s
 Kubernetes also provides several key features that make it easy to manage containerized applications, such as service discovery, load balancing, and auto-scaling. Service discovery allows applications to easily find and communicate with other services in the same cluster. Load balancing ensures that traffic is distributed evenly across all instances of a service, while auto-scaling makes it easy to automatically scale the number of instances up or down based on demand.
 
 
-# Main components
+## Main components
 In this section I'll provide a more detailed explanation of the most important components.
 
-## Pods
+### Pods
 
 In Kubernetes, a pod is the smallest deployable unit that can be created, scheduled, and managed. Pods can contain one or more containers, which share the same network namespace and can communicate with each other using inter-process communication (IPC). The declarative language of Kubernetes is used to define pods in a Kubernetes manifest file, which is a YAML or JSON file that describes the desired state of the pod.
 
@@ -71,7 +78,7 @@ In this example, the manifest file specifies that the pod should be named "my-po
 Once the manifest file has been created, it can be applied to the Kubernetes cluster using the *kubectl apply* command. Kubernetes will then compare the desired state specified in the manifest file with the actual state of the cluster and make any necessary changes to ensure that the desired state is achieved.
 
 
-## Deployments
+### Deployments
 A deployment is an object that defines the desired state of a set of replicated pods. Deployments are a higher-level abstraction that enables declarative updates to the desired state of the pod set, allowing for easier management of the underlying resources.
 
 A Kubernetes deployment is responsible for creating and managing a ReplicaSet, which is a Kubernetes object that ensures a specified number of identical replicas of a pod are running at any given time. Deployments provide a way to manage the scaling and rolling updates of pods, by automating the creation and deletion of replica sets as necessary. The deployment object also provides rollback and pause/resume functionality, allowing for more fine-grained control over the lifecycle of the pod set.
@@ -111,7 +118,7 @@ spec:
 
 In this example, the manifest file specifies that the deployment should be named "my-deployment" and should include three replicas. It also specifies that the deployment should manage pods labeled with "app: my-app" and should create pods with one container running the Nginx image and exposing port 80.
 
-## Services
+### Services
 
 A Service is an abstraction that enables a stable IP address and DNS name to be assigned to a set of Pods. In essence, it serves as a mechanism for defining a logical grouping of Pods and providing a single point of access to them, regardless of the specific Pod that a client may be communicating with at any given time. Services are typically used to enable load balancing and horizontal scaling of application components running within a Kubernetes cluster.
 
@@ -127,7 +134,7 @@ Service can be configured in several ways depending on the requirements of the a
 
 In addition to these basic configurations, Services can also be combined with other Kubernetes features such as selectors, labels, and endpoints to provide more advanced functionality. For example, Services can be used in conjunction with Ingress controllers to provide an HTTP(S) load balancer that routes traffic based on the URL path or hostname of incoming requests.
 
-## Volumes
+### Volumes
 
 A volume is a directory accessible to containers in a Pod. A volume can be used to store data that needs to be shared between containers, or to persist data beyond the lifetime of a container. Volumes in Kubernetes are defined using a declarative configuration file in YAML format.
 
@@ -156,9 +163,8 @@ spec:
 
 This configuration file specifies that a hostPath volume named *my-volume* should be mounted at */data *inside the container. The *volumeMounts* field in the container specification specifies which volume to mount, and where to mount it.
 
-# My contribution
 
-## The Problem
+# Lack of checks on the configuration of the containers
 When writing the specification of a Pod one can specify the container images to run and  from which registry  pull it from. Container registries are software repositories that store and distribute container images. A container registry is typically used by developers and DevOps teams to store and manage container images, which can be easily shared across different environments, such as development, staging, and production. Container registries provide features like versioning, access control, and image scanning to ensure that container images are secure, reliable, and up-to-date.
 
 Most often, images require configuration through the use of environment variables.
@@ -182,14 +188,14 @@ It could be also a potentially costly error, since most of K8s clusters exist on
 
 There is no automatic mechanism that inform the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 
-## A Possible Solution
+# Typechecking of the configuration options 
 
 This mechanism could be included in the development environment, for example as a LSP language server.
 The solution I propose is to provide a mechanism that allows the developer to check if the configuration they have written satisfies some minimum configuration requirements, defined by the maintainer of the image. This minimum configuration schema is stored in the registry, and is accessible by the developer's IDE when writing the specification of the Pod. The developer can then check if the configuration they have written satisfies the minimum configuration requirements, and if not, the IDE will inform the developer of the missing configuration options, and the type of the configuration options.
 
 The [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
 
-### Schema of the configuration options
+## Schema of the configuration options
 
 The schema of the configuration options is a JSON object that specifies the configuration options of the image, and the type of each configuration option.  The schema should contain information about the mandatory configuration options, and the facultative configuration options. The schema should also contain information about the default value of the facultative configuration options.
 
@@ -248,7 +254,7 @@ Another case is when the default value of a facultative configuration option is 
 
 Table: Special meaning of the default value of a facultative configuration option
 
-#### Another proposal for the notion of type in this context using regular expressions
+### Another proposal for the notion of type in this context using regular expressions
 
 An alternative to strictly defining the type of the configuration option is to define a regular expression that the value of the configuration option should satisfy. This could be useful in the case of a configuration option that is a string, but that has to satisfy some constraints.
 
@@ -291,7 +297,7 @@ If the regex approach is used, the schema of the configuration options could be 
 Either the type approach or the regex approach could be used. The type approach is simpler, but it is also less flexible.
 In my research, I couldn't find any example of an image that requires a complex type that requires a regular expression to be defined. For this reason, I included both approaches in this document, but I will use the type approach in the rest of the document. I think nevertheless that the regex approach could be useful in some cases, like the ones mentioned above.
 
-### Protocol for the communication between the IDE and the registry
+## Protocol for the communication between the IDE and the registry
 
 The registries should offer an HTTP endpoint that replies with the configuration schema of the requested image, to be consumed by the IDE.
 
@@ -325,7 +331,7 @@ spec:  # PodSpec
 ```
 
 
-#### API for the communication between the IDE and the registry
+### API for the communication between the IDE and the registry
 
 The registries should offer an HTTP endpoint that replies with the configuration schema of the requested image.
 
@@ -337,7 +343,7 @@ The specification of the API should fit in the already existing API of the regis
 The response of the API should be a JSON object that contains the configuration schema of the image as described in the previous section. 
 
 
-#### How the Language Server checks the configuration options
+### How the Language Server checks the configuration options
 
 The [Language Server Protocol specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) provides a set of methods that the IDE can use to communicate with the Language Server. The methods that are used in this context are:
 
@@ -359,7 +365,7 @@ The same procedure is followed when the user changes the content of the YAML fil
 For determining  on which registry the image is stored, the language server uses the same criteria as the docker and kubernetes clients. The language server first checks if the image name contains a registry address. If it does then it uses that registry. If it does not, then it assumes that the image is stored in Docker Hub.
 
 
-### Generation of the configuration schema
+## Generation of the configuration schema
 
 The current status of documentation of the registries is that it is not machine readable. The documentation is written in a human readable format, and it is not possible to automatically generate the configuration file from the documentation. There is also a lack of standardization of the documentation format, since each registry has its own format, and there is no standard way to retrieve the documentation of an image.  Sometimes the documentation is in the image description of the registry, sometimes it's on the website of the application, sometimes it is in the README of the image source code repository.
 
@@ -368,12 +374,18 @@ A possible way to ease the generation of the configuration schema is to ask the 
 I've only looked at Docker Hub, being one of the most popular public registries, that has also searching and filtering capabilities. Docker Hub allows the user to search for images by name and tags. The description of the image is just a free text field.
 
 
-## Examples 
+# Examples 
 
 These are examples based on some of the most popular images taken from the public registry of [Docker](https://hub.docker.com).
 These examples were chosen because they were in the most pulled images list of Docker Hub and they have a configuration schema that is neither empty or too big.
 
-### mongoDB
+I've chosen databases because they are one of the most used applications in the industry, and they also exhibit a wide range of configuration options.
+
+## mongoDB
+
+MongoDB is a document-oriented database program. It is one of the most popular NoSQL databases.
+From the [documentation](https://hub.docker.com/_/mongo) of the image, we can see that the image has two environment variables that are mandatory, and they are used to set the username and password of the root user of the database.
+
 ``` json
 {
   "image": "mongo:latest",
@@ -388,7 +400,10 @@ These examples were chosen because they were in the most pulled images list of D
 }
 ```
 
-### nginx
+## nginx
+
+Nginx is a web server that can also be used as a reverse proxy, load balancer, mail proxy and HTTP cache.
+From the [documentation](https://hub.docker.com/_/nginx) of the image, we can see that the image has three environment variables that are not mandatory, and they are used to set the template directory, the template suffix and the output directory of the nginx configuration files.
 
 ``` json
 {
@@ -414,8 +429,15 @@ These examples were chosen because they were in the most pulled images list of D
 
 
 
-### InfluxDB
 
+## InfluxDB
+
+
+InfluxDB is a time series database. It is optimized for fast, high-availability storage and retrieval of time series data in fields such as operations monitoring, application metrics, Internet of Things sensor data, and real-time analytics.
+
+From the [documentation](https://hub.docker.com/_/influxdb) of the image, we can see that the image has five environment variables that are mandatory, and they are used to set the username, password, organization, bucket and retention period of the database. It also has two environment variables that are not mandatory, and they are used to set the admin token and the retention period of the database.
+
+In this example we can see the use of the `!random` keyword, which is used to generate a random string, in this case for the admin token.
 ``` json
 {
   "image": "influxDB:latest",
@@ -451,8 +473,38 @@ These examples were chosen because they were in the most pulled images list of D
 }
 ```
 
+## postgres
 
-## Conclusion
+PostgreSQL is a free and open-source relational database management system emphasizing extensibility and SQL compliance.
+
+From the [documentation](https://hub.docker.com/_/postgres) of the image, we can see that the image has three environment variables, one of which is mandatory, and they are used to set the password, username and database name of the database.
+
+In this example we can also see that the default value of the POSTGRES_DB variable is the value of the POSTGRES_USER variable. This is a common pattern in the configuration of images, where the default value of a variable is the value of another variable.
+
+```json
+{
+  "image": "postgres:latest",
+  "POSTGRES_PASSWORD" : {
+    "mandatory" : true,
+    "type":"string"
+  },
+  "POSTGRES_USER" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "postgres"
+  },
+  "POSTGRES_DB" : {
+    "mandatory" : false,
+    "type":"string",
+    "default": "$POSTGRES_USER"
+  }
+}
+```
+
+
+
+
+# Conclusion
 
 We have seen how a misconfiguration of environment variables could lead to difficult to debug crashes or misbehaviours of the application.
 In this report I've proposed a solution to the problem of the lack of type checking of environment variables in the declarative language of kubernetes. The solution is based on the Language Server Protocol, which is a protocol that is used by most of the popular IDEs. The solution is based on the idea of generating the configuration schema of an image from the documentation of the image. The configuration schema is then stored on the registry, and it is retrieved by the language server when the user is writing the YAML file. The language server then checks the configuration options of the YAML file against the configuration schema of the image, and it notifies the user of any errors or warnings.
