@@ -1,10 +1,11 @@
 ---
-title: "Research Project - Software Engineering 2"
+title: "Research Project"
+subtitle: "Software Engineering 2"
 author:  "Marco Molè"
 date: AA 2022/2023
 toc: true
 numbersections: true
-fontsize: 11pt
+fontsize: 10pt
 listings: true
 toc-depth: 5
 links-as-notes: true
@@ -31,7 +32,7 @@ Overall, Kubernetes represents a significant advancement in the field of contain
 The Kubernetes configuration language is expressed in YAML or JSON format, and it consists of a set of declarative statements that describe the desired state of the Kubernetes resources. These statements include specifications for the containers that run within the resources, as well as other settings such as environment variables, ports, and volumes. Being declarative, the configuration language does not specify how the desired state should be achieved, but rather what the desired state is. This allows Kubernetes to automatically manage the resources and ensure that the desired state is achieved and maintained. For example, if a container crashes or becomes unresponsive, Kubernetes will automatically restart it to ensure that the desired state is maintained. Similarly, if a node fails, Kubernetes will automatically reschedule the pods that were running on that node to ensure that the desired state is maintained. 
 
 
-## How kubernetes works
+## How Kubernetes works
 
 At its core, Kubernetes is built around the concept of a cluster, which is a group of machines (called nodes) that work together to run containerized applications. The Kubernetes control plane, which is responsible for managing the cluster, consists of several components that work together to provide a robust and scalable platform for deploying and managing containerized applications.
 
@@ -54,7 +55,7 @@ To define a pod using Kubernetes' declarative language, the manifest file must i
 
 1. metadata: This includes information such as the name and labels of the pod.
 
-2. spec: This includes information about the desired state of the pod, such as the containers it should contain, the image(s) to use, and the commands to run. In this section, you can also specify the ports to expose, any environment variables to set, and any volumes to mount.
+2. spec: This includes information about the desired state of the pod, such as the containers it should contain, the image(s) to use, and the commands to run. In this section are specified the ports to expose, any environment variables to set, and any volumes to mount.
 
 For example, the following YAML manifest file defines a pod with one container:
 ```yaml
@@ -131,13 +132,32 @@ Service can be configured in several ways depending on the requirements of the a
 3. LoadBalancer: This configuration creates a load balancer in a cloud provider's network, which distributes incoming traffic to the Service across multiple nodes. This is typically used when external traffic needs to be distributed across multiple nodes or when a high degree of availability is required.
 4. ExternalName: This configuration provides a way to create a Service that simply maps to an external DNS name. This is useful when an application needs to access an external resource, such as a database or web service, using a stable DNS name.
 
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service
+spec:
+  selector:
+    app: mongodb
+  ports:
+  - protocol: TCP
+    port: 27017
+    targetPort: 27017
+
+```
+
+The above manifest file defines a Service named "mongo-service" that exposes port 27017 and routes traffic to Pods labeled with "app: mongodb". Other resources within the cluster can then access the Service using the DNS name "mongo-service" and port 27017.
+
+
 In addition to these basic configurations, Services can also be combined with other Kubernetes features such as selectors, labels, and endpoints to provide more advanced functionality. For example, Services can be used in conjunction with Ingress controllers to provide an HTTP(S) load balancer that routes traffic based on the URL path or hostname of incoming requests.
+
 
 ### Volumes
 
-A volume is a directory accessible to containers in a Pod. A volume can be used to store data that needs to be shared between containers, or to persist data beyond the lifetime of a container. Volumes in Kubernetes are defined using a declarative configuration file in YAML format.
+A volume is a directory accessible to containers in a Pod. A volume can be used to store data that needs to be shared between containers, or to persist data beyond the lifetime of a container.
 
-There are several types of volumes that can be used in Kubernetes, including hostPath volumes, emptyDir volumes, configMap volumes, secret volumes, and persistent volumes. HostPath volumes mount a directory from the host into the container, while emptyDir volumes are created when a Pod is scheduled on a node and deleted when the Pod is terminated. ConfigMap volumes and secret volumes provide a way to inject configuration data or sensitive information into a container, respectively. Persistent volumes are used to store data beyond the lifetime of a Pod, and can be dynamically provisioned or statically created by an administrator.
+Several types of volumes can be used in Kubernetes, including hostPath volumes, emptyDir volumes, configMap volumes, secret volumes, and persistent volumes. HostPath volumes mount a directory from the host into the container, while emptyDir volumes are created when a Pod is scheduled on a node and deleted when the Pod is terminated. *ConfigMap* volumes and *Secret* volumes provide a way to inject configuration data or sensitive information into a container, respectively. Persistent volumes are used to store data beyond the lifetime of a Pod and can be dynamically provisioned or statically created by an administrator.
 
 To define a volume in Kubernetes, the YAML configuration file would include a volumes section with the desired volume type and configuration options. For example, to define a hostPath volume that mounts the /data directory from the host into a container, the YAML file would look like:
 
@@ -164,42 +184,43 @@ This configuration file specifies that a hostPath volume named *my-volume* shoul
 
 
 # Lack of checks on the configuration of the containers
-When writing the specification of a Pod one can specify the container images to run and  from which registry  pull it from. Container registries are software repositories that store and distribute container images. A container registry is typically used by developers and DevOps teams to store and manage container images, which can be easily shared across different environments, such as development, staging, and production. Container registries provide features like versioning, access control, and image scanning to ensure that container images are secure, reliable, and up-to-date.
+
+When writing the specification of a Pod one can specify the container images to run and from which registry pull it from. Container registries are software repositories that store and distribute container images. A container registry is typically used by developers and DevOps teams to store and manage container images, which can be easily shared across different environments, such as development, staging, and production. Container registries provide features like versioning, access control, and image scanning to ensure that container images are secure, reliable, and up-to-date.
 
 Most often, images require configuration through the use of environment variables.
 The documentation of these variables is generally found on the registry itself, to be consulted by the developer when writing the specification of the Pod.
 
-Configuration errors could be caused by human error, either neglecting to read the documentation, or by misinterpreting it, or by the lack of documentation of the image itself.
+Configuration errors could be caused by human error, either neglecting to read the documentation, misinterpreting it or by the lack of documentation of the image itself.
 Misconfiguration could lead to the application not working as expected, or not working at all.
-It also could be a security risk, since a misconfiguration of security parameters could lead to the use of default credentials, or to the use of a non secure protocol. 
+It also could be a security risk, since a misconfiguration of security parameters could lead to the use of default credentials, or the use of a not secure protocol. 
 
-An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the highly level of coupling of microservices architecture. There is also an additional element of complexity due to the fact that the application is running inside a virtualized environment, and the failure could be caused by a misconfiguration of the container itself.
+An erroneous configuration of a container is hard to debug, since the point of failure may not be immediately recognizable due to the high level of coupling of microservices architecture. There is also an additional element of complexity because the application is running inside a virtualized environment, and the failure could be caused by the runtime environment itself.
 
 The manifestations of these errors are mainly two: the application does not work as expected, or it does not work at all.
 The first case happens when the misconfiguration is not critical, and the application is still able to run, but with some functionalities not working as expected. For example, the application could be running with some default configuration that does not expose all the functionalities of the application.
 
-The second case happens when the misconfiguration is critical, and the application is not able to run at all. For example, no credentials are provided to the application, and the application is not able to connect to the database.
+The second case happens when the misconfiguration is critical, and the application is not able to run at all. For example, no credentials are provided to the application, and the application is not able to connect to other services.
 
-In both cases, the developer has to debug the application to find the cause of the error, and then fix it. This is a time consuming process, since the developer has to find the cause of the error, and then fix it.
+In both cases, the developer has to debug the application to find the cause of the error, and then fix it. This is a time consuming process since the developer has to find the cause of the error, and then fix it.
 
 
-It could be also a potentially costly error, since most of K8s clusters exist on a pay-per-use cloud environment.
+It could be also a potentially costly error since most K8s clusters exist on a pay-per-use cloud environment.
 
-There is no automatic mechanism that inform the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
+There is no automatic mechanism that informs the developer if the configuration they have written is correct, or at least if it satisfies some minimum configuration requirements.
 
-# Typechecking of the configuration options 
+# Proposed automatic mechanism to check the configuration of the containers
 
-This mechanism could be included in the development environment, for example as a LSP language server.
-The solution I propose is to provide a mechanism that allows the developer to check if the configuration they have written satisfies some minimum configuration requirements, defined by the maintainer of the image. This minimum configuration schema is stored in the registry, and is accessible by the developer's IDE when writing the specification of the Pod. The developer can then check if the configuration they have written satisfies the minimum configuration requirements, and if not, the IDE will inform the developer of the missing configuration options, and the type of the configuration options.
+The solution I propose is to provide a mechanism that allows the developer to check if the configuration they have written satisfies some minimum configuration requirements, defined by the maintainer of the image. This minimum configuration schema is stored in the registry and is accessible by the developer's IDE when writing the specification of the Pod. The developer can then check if the configuration they have written satisfies the minimum configuration requirements, and if not, the IDE will inform the developer of the missing configuration options and the type of configuration options.
 
-The [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
+The mechanism I propose leverages the widespread adoption of the [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) by the most popular IDEs.
+LSP is a communication protocol that enables the integration of programming language analyzers, such as code editors, with language servers that provide language-specific features such as code completion, error detection, and refactoring. The protocol standardizes the exchange of information between the language server and the client, allowing for interoperability between different code editors and programming languages. This can help developers work more efficiently by providing consistent, language-specific tools across different editing environments.
+
+Firstly I'm going to describe how the configuration schema is defined, then I'm going to describe how the IDE, LSP and registry interact to provide the developer with the configuration schema. In the end, I'll make some considerations on the automatic generation of the configuration schema.
 
 ## Schema of the configuration options
 
 The schema of the configuration options is a JSON object that specifies the configuration options of the image, and the type of each configuration option.  The schema should contain information about the mandatory configuration options, and the facultative configuration options. The schema should also contain information about the default value of the facultative configuration options.
 
-
-\newpage 
 
 The format of the schema could be generalized to this structure:
 
@@ -218,7 +239,7 @@ The format of the schema could be generalized to this structure:
 }
 ```
 
-The type of the configuration option could be one of the following: string, number, path (ie a string that represents a path), boolean etc. More types definition could be added if needed.
+The type of configuration option could be one of the following: string, number, path (ie a string that represents a path), boolean etc. More types definitions could be added if needed.
 
 An interesting case is the case of the default value of a facultative configuration option. The default value could be a string, or it could be the value of another configuration option. In the latter case, the value of the default value should be a string that represents the name of the configuration option, preceded by the *\$* symbol. The *\$* symbol is used to express that the default value is the value of another configuration option.
 
@@ -269,11 +290,11 @@ boolean    true|false
 domain     ^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$
 ipv4       ^([0-9]{1,3}\.){3}[0-9]{1,3}$
 ipv6       ^([0-9a-f]{1,4}:){7}([0-9a-f]){1,4}$
-url        [-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?
+URL        [-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?
 
 Table: Some examples of types and their corresponding regular expressions
 
-This approach is more flexible than the previous one, since it allows to define the type of the configuration option in a more precise way. However, it is also more complex, since it requires the definition of a regular expression for each type of configuration option. This could be a problem in the case of complex types, like the url type. In this case, the regular expression is very complex, and it is not easy to understand what it does.
+This approach is more flexible than the previous one since it allows us to define the type of configuration option in a more precise way. However, it is also more complex, since it requires the definition of a regular expression for each type of configuration option. This could be a problem in the case of complex types, like the URL type. In this case, the regular expression is very complex, and it is not easy to understand what it does.
 
 Some cases where this approach could be useful are enforcing password complexity, or enforcing the format of a path.
 
@@ -306,12 +327,12 @@ The flow of the interaction between the parties is shown in the following sequen
 
 The developer writes the specification of the Pod in a YAML file, and the IDE sends a request to the registry to retrieve the configuration options of the specified image.
 
-This solution provides very little overhead on the registry, since the registry only has to reply to the request of the Language Server with the configuration schema of the requested image. 
+The overhead in traffic and computation is minimal since the registry has to reply to the request of the Language Server with the configuration schema of the requested image, and this happens only when the manifest of the Pod is being written by the developer. 
 
 This information is then checked against the PodSpec.containers.env object, which is the object where all the environment variables of the specific containers are specified. 
 The results of this analysis are then shown to the user as warnings or error marks in the IDE.
 
-Recall how kubernetes objects are structured. The PodSpec.containers.env object is a list of key-value pairs. The key is the name of the environment variable, and the value is the value of the environment variable. Environment variables must be defined as a string. 
+Recall how Kubernetes objects are structured. The PodSpec.containers.env object is a list of key-value pairs. The key is the name of the environment variable, and the value is the value of the environment variable. Environment variables must be defined as a string. 
 
 ```yaml
 apiVersion: v1
@@ -334,7 +355,7 @@ spec:  # PodSpec
 
 The registries should offer an HTTP endpoint that replies with the configuration schema of the requested image.
 
-The specification of the API should fit in the already existing API of the registries, [I'm taking Docker Hub as an example.](https://docs.docker.com/registry/spec/api/). The API should be implemented as a new endpoint of the registry API, that is:
+The specification of the API should fit in the already existing API of the registries, [I'm taking Docker Hub as an example](https://docs.docker.com/registry/spec/api/). The API should be implemented as a new endpoint of the registry API, that is:
 
 - GET /v2/ \<name> / schema
   - name: name of the image
@@ -354,14 +375,14 @@ The [Language Server Protocol specification](https://microsoft.github.io/languag
 
 - textDocument/didChange: The document change notification is sent from the client to the server to signal changes to a text document.
 
-- textDocument/publishDiagnostics: Diagnostics notification are sent from the server to the client to signal results of validation runs.
+- textDocument/publishDiagnostics: Diagnostics notifications are sent from the server to the client to signal the results of validation runs.
 
 
-The language server when receives the initialize request from the IDE, it sends back the initialized notification. The IDE then sends the textDocument/didOpen request to the language server, which contains the content of the YAML file. The language server then parses the YAML file, and extracts the image name and tag. The language server then sends a request to the registry to retrieve the configuration schema of the specified image. The registry replies with the configuration schema of the image, and the language server then checks the configuration options of the YAML file against the configuration schema of the image. The results of this analysis are then sent to the IDE as a textDocument/publishDiagnostics notification.
+The language server when receives the initialize request from the IDE, sends back the initialized notification. The IDE then sends the textDocument/didOpen request to the language server, which contains the content of the YAML file. The language server then parses the YAML file, and extracts the image name and tag. The language server then sends a request to the registry to retrieve the configuration schema of the specified image. The registry replies with the configuration schema of the image, and the language server then checks the configuration options of the YAML file against the configuration schema of the image. The results of this analysis are then sent to the IDE as a textDocument/publishDiagnostics notification.
 
 The same procedure is followed when the user changes the content of the YAML file, which is notified by the IDE sending a textDocument/didChange request to the language server, which contains the changes applied to the YAML file.
 
-For determining  on which registry the image is stored, the language server uses the same criteria as the docker and kubernetes clients. The language server first checks if the image name contains a registry address. If it does then it uses that registry. If it does not, then it assumes that the image is stored in Docker Hub.
+For determining on which registry the image is stored, the language server uses the same criteria as the docker and kubernetes clients. The language server first checks if the image name contains a registry address. If it does then it uses that registry. If it does not, then it assumes that the image is stored in Docker Hub.
 
 
 ## Generation of the configuration schema
@@ -376,7 +397,7 @@ I've only looked at Docker Hub, being one of the most popular public registries,
 # Examples 
 
 These are examples based on some of the most popular images taken from the public registry of [Docker](https://hub.docker.com).
-These examples were chosen because they were in the most pulled images list of Docker Hub and they have a configuration schema that is neither empty or too big.
+These examples were chosen because they were in the most pulled images list of Docker Hub and they have a configuration schema that is neither empty nor too big.
 
 I've chosen databases because they are one of the most used applications in the industry, and they also exhibit a wide range of configuration options.
 
@@ -437,6 +458,7 @@ InfluxDB is a time series database. It is optimized for fast, high-availability 
 From the [documentation](https://hub.docker.com/_/influxdb) of the image, we can see that the image has five environment variables that are mandatory, and they are used to set the username, password, organization, bucket and retention period of the database. It also has two environment variables that are not mandatory, and they are used to set the admin token and the retention period of the database.
 
 In this example we can see the use of the `!random` keyword, which is used to generate a random string, in this case for the admin token.
+
 ``` json
 {
   "image": "influxDB:latest",
@@ -477,7 +499,6 @@ In this example we can see the use of the `!random` keyword, which is used to ge
 PostgreSQL is a free and open-source relational database management system emphasizing extensibility and SQL compliance.
 
 From the [documentation](https://hub.docker.com/_/postgres) of the image, we can see that the image has three environment variables, one of which is mandatory, and they are used to set the password, username and database name of the database.
-
 In this example we can also see that the default value of the POSTGRES_DB variable is the value of the POSTGRES_USER variable. This is a common pattern in the configuration of images, where the default value of a variable is the value of another variable.
 
 ```json
@@ -506,7 +527,8 @@ In this example we can also see that the default value of the POSTGRES_DB variab
 # Conclusion
 
 We have seen how a misconfiguration of environment variables could lead to difficult to debug crashes or misbehaviours of the application.
-In this report I've proposed a solution to the problem of the lack of type checking of environment variables in the declarative language of kubernetes. The solution is based on the Language Server Protocol, which is a protocol that is used by most of the popular IDEs. The solution is based on the idea of generating the configuration schema of an image from the documentation of the image. The configuration schema is then stored on the registry, and it is retrieved by the language server when the user is writing the YAML file. The language server then checks the configuration options of the YAML file against the configuration schema of the image, and it notifies the user of any errors or warnings.
+In this report I've proposed a solution to the problem of the lack of type checking of environment variables in the declarative language of Kubernetes. The solution is based on the Language Server Protocol, which is a protocol that is used by most of the popular IDEs. The solution is based on the idea of generating the configuration schema of an image from the documentation of the image. The configuration schema is then stored on the registry, and it is retrieved by the language server when the user is writing the YAML file. The language server then checks the configuration options of the YAML file against the configuration schema of the image, and it notifies the user of any errors or warnings.
+
 
 
 The advantages of implementing this "type checking" mechanism in the the development environment are:
@@ -518,4 +540,4 @@ The advantages of implementing this "type checking" mechanism in the the develop
 3. Flexible, since the declarative language is only one of the ways to configure kubernetes objects (Secrets and ConfigMap can be stored on external providers). The LSP server could be configured to analyze codebases that rely on third party  External Secret Store providers.
 
 
-In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibilities of errors when deploying a big system with a lot of different components.
+In the last decade we have seen the rise of a new figure in the software engineering space: the DevOps engineer. Its role is to implement and maintain the ever more complex systems development life cycle and deployment. The one who deploys the software is not the one who wrote the application. This solution could facilitate the knowledge exchange between the two parties and reduce the possibility of errors when deploying a big system with a lot of different components.
